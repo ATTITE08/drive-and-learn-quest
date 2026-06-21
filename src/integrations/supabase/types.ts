@@ -14,16 +14,274 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      answers: {
+        Row: {
+          attempt_id: string
+          created_at: string
+          id: string
+          is_correct: boolean
+          question_id: string
+          selected_index: number | null
+        }
+        Insert: {
+          attempt_id: string
+          created_at?: string
+          id?: string
+          is_correct?: boolean
+          question_id: string
+          selected_index?: number | null
+        }
+        Update: {
+          attempt_id?: string
+          created_at?: string
+          id?: string
+          is_correct?: boolean
+          question_id?: string
+          selected_index?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "answers_attempt_id_fkey"
+            columns: ["attempt_id"]
+            isOneToOne: false
+            referencedRelation: "attempts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      attempts: {
+        Row: {
+          created_at: string
+          duration_seconds: number | null
+          finished_at: string | null
+          id: string
+          quiz_id: string
+          score: number
+          total: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          duration_seconds?: number | null
+          finished_at?: string | null
+          id?: string
+          quiz_id: string
+          score?: number
+          total?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          duration_seconds?: number | null
+          finished_at?: string | null
+          id?: string
+          quiz_id?: string
+          score?: number
+          total?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attempts_quiz_id_fkey"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "quizzes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      documents: {
+        Row: {
+          content_text: string | null
+          created_at: string
+          id: string
+          level: Database["public"]["Enums"]["agent_level"]
+          storage_path: string
+          subject: Database["public"]["Enums"]["subject"]
+          title: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          content_text?: string | null
+          created_at?: string
+          id?: string
+          level: Database["public"]["Enums"]["agent_level"]
+          storage_path: string
+          subject: Database["public"]["Enums"]["subject"]
+          title: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          content_text?: string | null
+          created_at?: string
+          id?: string
+          level?: Database["public"]["Enums"]["agent_level"]
+          storage_path?: string
+          subject?: Database["public"]["Enums"]["subject"]
+          title?: string
+          uploaded_by?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          level: Database["public"]["Enums"]["agent_level"] | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id: string
+          level?: Database["public"]["Enums"]["agent_level"] | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          level?: Database["public"]["Enums"]["agent_level"] | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      questions: {
+        Row: {
+          choices: Json
+          correct_index: number
+          created_at: string
+          explanation: string | null
+          id: string
+          position: number
+          prompt: string
+          quiz_id: string
+        }
+        Insert: {
+          choices: Json
+          correct_index: number
+          created_at?: string
+          explanation?: string | null
+          id?: string
+          position?: number
+          prompt: string
+          quiz_id: string
+        }
+        Update: {
+          choices?: Json
+          correct_index?: number
+          created_at?: string
+          explanation?: string | null
+          id?: string
+          position?: number
+          prompt?: string
+          quiz_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "questions_quiz_id_fkey"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "quizzes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quizzes: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          document_id: string | null
+          id: string
+          level: Database["public"]["Enums"]["agent_level"]
+          subject: Database["public"]["Enums"]["subject"]
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          document_id?: string | null
+          id?: string
+          level: Database["public"]["Enums"]["agent_level"]
+          subject: Database["public"]["Enums"]["subject"]
+          title: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          document_id?: string | null
+          id?: string
+          level?: Database["public"]["Enums"]["agent_level"]
+          subject?: Database["public"]["Enums"]["subject"]
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quizzes_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_role: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      agent_level:
+        | "aide_conducteur"
+        | "conducteur_manoeuvre"
+        | "conducteur_ligne"
+        | "chef_traction"
+      app_role: "admin" | "formateur" | "agent"
+      subject: "igs" | "prac" | "frein" | "technologies"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +408,15 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      agent_level: [
+        "aide_conducteur",
+        "conducteur_manoeuvre",
+        "conducteur_ligne",
+        "chef_traction",
+      ],
+      app_role: ["admin", "formateur", "agent"],
+      subject: ["igs", "prac", "frein", "technologies"],
+    },
   },
 } as const
