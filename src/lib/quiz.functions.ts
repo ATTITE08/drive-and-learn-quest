@@ -119,7 +119,7 @@ Règles :
         model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: "Tu es un expert en pédagogie ferroviaire. Tu produis uniquement des QCM via l'outil fourni." },
-          { role: "user", content: prompt },
+          { role: "user", content: userContent },
         ],
         tools: [tool],
         tool_choice: { type: "function", function: { name: "save_questions" } },
