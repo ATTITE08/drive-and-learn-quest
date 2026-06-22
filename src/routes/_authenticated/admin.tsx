@@ -65,7 +65,11 @@ function UploadDocCard() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title || !subject || !level || !content) return toast.error("Remplissez tous les champs (le contenu textuel sert à la génération IA).");
+    if (!title || !subject || !level) return toast.error("Renseignez le titre, la matière et le niveau.");
+    const isPdf = !!file && /\.pdf$/i.test(file.name);
+    if (!isPdf && !content.trim()) {
+      return toast.error("Joignez un PDF ou collez le contenu textuel du document.");
+    }
     setBusy(true);
     try {
       const { data: u } = await supabase.auth.getUser();
@@ -77,10 +81,10 @@ function UploadDocCard() {
       }
       const { error } = await supabase.from("documents").insert({
         title, subject: subject as any, level: level as any,
-        storage_path: storagePath, content_text: content, uploaded_by: u.user!.id,
+        storage_path: storagePath, content_text: content || null, uploaded_by: u.user!.id,
       });
       if (error) throw error;
-      toast.success("Document ajouté");
+      toast.success(isPdf && !content ? "PDF ajouté — cliquez sur « Générer un QCM » pour lancer l'IA." : "Document ajouté");
       setTitle(""); setContent(""); setFile(null);
       qc.invalidateQueries({ queryKey: ["documents"] });
     } catch (err: any) {
@@ -91,6 +95,9 @@ function UploadDocCard() {
   return (
     <Card className="p-6">
       <h3 className="font-display text-lg font-semibold flex items-center gap-2"><Upload className="h-5 w-5" /> Ajouter un document</h3>
+      <p className="text-xs text-muted-foreground mt-1">
+        Importez un <strong>PDF</strong> et l'IA générera automatiquement le questionnaire à partir de son contenu. Pour les autres formats, collez le texte ci-dessous.
+      </p>
       <form onSubmit={submit} className="mt-4 grid gap-4 md:grid-cols-2">
         <div className="md:col-span-2">
           <Label>Titre</Label>
@@ -111,12 +118,13 @@ function UploadDocCard() {
           </Select>
         </div>
         <div className="md:col-span-2">
-          <Label>Contenu textuel (utilisé pour générer les QCM)</Label>
-          <Textarea rows={8} value={content} onChange={(e) => setContent(e.target.value)} placeholder="Collez ici le contenu textuel du document — extraits, cours, procédures…" required />
+          <Label>Fichier PDF source</Label>
+          <Input type="file" accept="application/pdf,.pdf" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+          {file && <p className="text-xs text-muted-foreground mt-1">{file.name}</p>}
         </div>
         <div className="md:col-span-2">
-          <Label>Fichier (optionnel — PDF, DOCX, etc.)</Label>
-          <Input type="file" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+          <Label>Contenu textuel {file && /\.pdf$/i.test(file.name) ? "(optionnel si PDF joint)" : "(requis si pas de PDF)"}</Label>
+          <Textarea rows={6} value={content} onChange={(e) => setContent(e.target.value)} placeholder="Collez ici le contenu textuel — utilisé pour les formats non-PDF ou pour compléter." />
         </div>
         <div className="md:col-span-2">
           <Button type="submit" disabled={busy}>{busy ? "Envoi…" : "Ajouter le document"}</Button>
