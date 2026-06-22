@@ -32,33 +32,53 @@ export const generateQuizFromDocument = createServerFn({ method: "POST" })
 
     const { data: doc, error: docErr } = await supabase
       .from("documents")
-      .select("id,title,subject,level,content_text")
+      .select("id,title,subject,level,content_text,storage_path")
       .eq("id", data.documentId)
       .single();
     if (docErr || !doc) throw new Error("Document introuvable");
-    if (!doc.content_text || doc.content_text.trim().length < 50) {
-      throw new Error("Le contenu textuel du document est trop court pour générer des questions.");
+
+    const hasText = (doc.content_text ?? "").trim().length >= 50;
+    const hasFile = !!doc.storage_path;
+    if (!hasText && !hasFile) {
+      throw new Error("Ajoutez un fichier PDF ou un contenu textuel suffisant pour générer des questions.");
     }
 
     const apiKey = process.env.LOVABLE_API_KEY;
     if (!apiKey) throw new Error("LOVABLE_API_KEY manquant");
 
-    const prompt = `Tu es un formateur expert dans le domaine ferroviaire. À partir du document suivant, rédige ${data.numQuestions} questions à choix multiples (QCM) en français pour des agents de conduite.
+    // If no text but a file is attached, download it (admin client bypasses RLS on storage).
+    let fileBlock: { type: "file"; file: { filename: string; file_data: string } } | null = null;
+    if (!hasText && hasFile) {
+      const ext = (doc.storage_path.split(".").pop() ?? "").toLowerCase();
+      if (ext !== "pdf") {
+        throw new Error("Génération automatique disponible uniquement pour les PDF. Pour les autres formats, collez le contenu textuel.");
+      }
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: blob, error: dlErr } = await supabaseAdmin.storage.from("documents").download(doc.storage_path);
+      if (dlErr || !blob) throw new Error("Impossible de télécharger le document: " + (dlErr?.message ?? ""));
+      const buf = new Uint8Array(await blob.arrayBuffer());
+      let binary = "";
+      for (let i = 0; i < buf.length; i++) binary += String.fromCharCode(buf[i]);
+      const b64 = btoa(binary);
+      const filename = doc.storage_path.split("/").pop() ?? "document.pdf";
+      fileBlock = { type: "file", file: { filename, file_data: `data:application/pdf;base64,${b64}` } };
+    }
+
+    const instructions = `Tu es un formateur expert dans le domaine ferroviaire. À partir du document fourni, rédige ${data.numQuestions} questions à choix multiples (QCM) en français pour des agents de conduite.
 
 Matière : ${SUBJECT_LABELS[doc.subject] ?? doc.subject}
 Niveau : ${LEVEL_LABELS[doc.level] ?? doc.level}
 
 Règles :
-- Chaque question doit avoir exactement 4 choix de réponse (A, B, C, D).
+- Chaque question doit avoir exactement 4 choix de réponse.
 - Une seule réponse correcte par question.
 - Inclure une explication brève (1-2 phrases) pour chaque question.
 - Les questions doivent être progressives et fidèles au contenu du document.
-- Vocabulaire technique ferroviaire approprié.
+- Vocabulaire technique ferroviaire approprié.`;
 
-Document source :
-"""
-${doc.content_text.slice(0, 12000)}
-"""`;
+    const userContent: any[] = [{ type: "text", text: instructions }];
+    if (fileBlock) userContent.push(fileBlock);
+    else userContent.push({ type: "text", text: `Document source :\n"""\n${doc.content_text!.slice(0, 12000)}\n"""` });
 
     const tool = {
       type: "function",
