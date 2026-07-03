@@ -9,12 +9,12 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LEVELS, SUBJECTS, levelLabel, subjectLabel } from "@/lib/constants";
 import { toast } from "sonner";
 import { Sparkles, Upload, FileText, Trash2, Users } from "lucide-react";
+
 
 export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminPage,
@@ -59,33 +59,28 @@ function UploadDocCard() {
   const [title, setTitle] = useState("");
   const [subject, setSubject] = useState<string>("");
   const [level, setLevel] = useState<string>("");
-  const [content, setContent] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || !subject || !level) return toast.error("Renseignez le titre, la matière et le niveau.");
-    const isPdf = !!file && /\.pdf$/i.test(file.name);
-    if (!isPdf && !content.trim()) {
-      return toast.error("Joignez un PDF ou collez le contenu textuel du document.");
+    if (!file || !/\.pdf$/i.test(file.name)) {
+      return toast.error("Un fichier PDF est requis pour générer un questionnaire.");
     }
     setBusy(true);
     try {
       const { data: u } = await supabase.auth.getUser();
-      let storagePath = "";
-      if (file) {
-        storagePath = `${u.user!.id}/${Date.now()}-${file.name}`;
-        const { error: upErr } = await supabase.storage.from("documents").upload(storagePath, file);
-        if (upErr) throw upErr;
-      }
+      const storagePath = `${u.user!.id}/${Date.now()}-${file.name}`;
+      const { error: upErr } = await supabase.storage.from("documents").upload(storagePath, file);
+      if (upErr) throw upErr;
       const { error } = await supabase.from("documents").insert({
         title, subject: subject as any, level: level as any,
-        storage_path: storagePath, content_text: content || null, uploaded_by: u.user!.id,
+        storage_path: storagePath, content_text: null, uploaded_by: u.user!.id,
       });
       if (error) throw error;
-      toast.success(isPdf && !content ? "PDF ajouté — cliquez sur « Générer un QCM » pour lancer l'IA." : "Document ajouté");
-      setTitle(""); setContent(""); setFile(null);
+      toast.success("PDF ajouté — cliquez sur « Générer un questionnaire » pour lancer l'IA.");
+      setTitle(""); setFile(null);
       qc.invalidateQueries({ queryKey: ["documents"] });
     } catch (err: any) {
       toast.error(err.message);
@@ -96,7 +91,7 @@ function UploadDocCard() {
     <Card className="p-6">
       <h3 className="font-display text-lg font-semibold flex items-center gap-2"><Upload className="h-5 w-5" /> Ajouter un document</h3>
       <p className="text-xs text-muted-foreground mt-1">
-        Importez un <strong>PDF</strong> et l'IA générera automatiquement le questionnaire à partir de son contenu. Pour les autres formats, collez le texte ci-dessous.
+        Importez un <strong>PDF</strong> ; l'IA générera le questionnaire (QCM et cas pratiques) à partir de son contenu.
       </p>
       <form onSubmit={submit} className="mt-4 grid gap-4 md:grid-cols-2">
         <div className="md:col-span-2">
@@ -118,13 +113,9 @@ function UploadDocCard() {
           </Select>
         </div>
         <div className="md:col-span-2">
-          <Label>Fichier PDF source</Label>
-          <Input type="file" accept="application/pdf,.pdf" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+          <Label>Fichier PDF source <span className="text-destructive">*</span></Label>
+          <Input type="file" accept="application/pdf,.pdf" required onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
           {file && <p className="text-xs text-muted-foreground mt-1">{file.name}</p>}
-        </div>
-        <div className="md:col-span-2">
-          <Label>Contenu textuel {file && /\.pdf$/i.test(file.name) ? "(optionnel si PDF joint)" : "(requis si pas de PDF)"}</Label>
-          <Textarea rows={6} value={content} onChange={(e) => setContent(e.target.value)} placeholder="Collez ici le contenu textuel — utilisé pour les formats non-PDF ou pour compléter." />
         </div>
         <div className="md:col-span-2">
           <Button type="submit" disabled={busy}>{busy ? "Envoi…" : "Ajouter le document"}</Button>
@@ -133,6 +124,7 @@ function UploadDocCard() {
     </Card>
   );
 }
+
 
 function DocumentsList() {
   const qc = useQueryClient();
@@ -150,7 +142,8 @@ function DocumentsList() {
   });
 
   const genMut = useMutation({
-    mutationFn: (documentId: string) => generate({ data: { documentId, numQuestions: 8 } }),
+    mutationFn: (v: { documentId: string; numQcm: number; numCasPratique: number }) =>
+      generate({ data: v }),
     onSuccess: (r: any) => {
       toast.success(`Questionnaire créé (${r.count} questions)`);
       qc.invalidateQueries({ queryKey: ["documents"] });
@@ -174,27 +167,57 @@ function DocumentsList() {
       ) : (
         <div className="mt-4 space-y-3">
           {docs.map((d: any) => (
-            <div key={d.id} className="flex flex-wrap items-center gap-3 rounded-lg border p-3">
-              <FileText className="h-5 w-5 text-rail" />
-              <div className="flex-1 min-w-[200px]">
-                <p className="font-medium">{d.title}</p>
-                <p className="text-xs text-muted-foreground">
-                  {subjectLabel(d.subject)} · {levelLabel(d.level)} · {d.quizzes?.length ?? 0} quiz généré(s)
-                </p>
-              </div>
-              <Button size="sm" onClick={() => genMut.mutate(d.id)} disabled={genMut.isPending}>
-                <Sparkles className="h-4 w-4 mr-1" /> {genMut.isPending ? "Génération…" : "Générer un QCM"}
-              </Button>
-              <Button size="sm" variant="ghost" onClick={() => del(d.id)}>
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
+            <DocumentRow key={d.id} doc={d} onGenerate={(v) => genMut.mutate(v)} onDelete={del} generating={genMut.isPending} />
           ))}
         </div>
       )}
     </Card>
   );
 }
+
+function DocumentRow({
+  doc, onGenerate, onDelete, generating,
+}: {
+  doc: any;
+  onGenerate: (v: { documentId: string; numQcm: number; numCasPratique: number }) => void;
+  onDelete: (id: string) => void;
+  generating: boolean;
+}) {
+  const [numQcm, setNumQcm] = useState(6);
+  const [numCas, setNumCas] = useState(2);
+  return (
+    <div className="flex flex-wrap items-center gap-3 rounded-lg border p-3">
+      <FileText className="h-5 w-5 text-rail" />
+      <div className="flex-1 min-w-[200px]">
+        <p className="font-medium">{doc.title}</p>
+        <p className="text-xs text-muted-foreground">
+          {subjectLabel(doc.subject)} · {levelLabel(doc.level)} · {doc.quizzes?.length ?? 0} quiz généré(s)
+        </p>
+      </div>
+      <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
+          <Label className="text-xs">QCM</Label>
+          <Input type="number" min={0} max={20} value={numQcm}
+            onChange={(e) => setNumQcm(Math.max(0, Math.min(20, Number(e.target.value) || 0)))}
+            className="w-16 h-8" />
+        </div>
+        <div className="flex items-center gap-1">
+          <Label className="text-xs">Cas prat.</Label>
+          <Input type="number" min={0} max={10} value={numCas}
+            onChange={(e) => setNumCas(Math.max(0, Math.min(10, Number(e.target.value) || 0)))}
+            className="w-16 h-8" />
+        </div>
+      </div>
+      <Button size="sm" onClick={() => onGenerate({ documentId: doc.id, numQcm, numCasPratique: numCas })} disabled={generating || (numQcm + numCas < 3)}>
+        <Sparkles className="h-4 w-4 mr-1" /> {generating ? "Génération…" : "Générer un questionnaire"}
+      </Button>
+      <Button size="sm" variant="ghost" onClick={() => onDelete(doc.id)}>
+        <Trash2 className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+}
+
 
 function UsersAdmin() {
   const qc = useQueryClient();

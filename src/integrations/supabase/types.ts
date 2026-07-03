@@ -22,6 +22,7 @@ export type Database = {
           is_correct: boolean
           question_id: string
           selected_index: number | null
+          text_answer: string | null
         }
         Insert: {
           attempt_id: string
@@ -30,6 +31,7 @@ export type Database = {
           is_correct?: boolean
           question_id: string
           selected_index?: number | null
+          text_answer?: string | null
         }
         Update: {
           attempt_id?: string
@@ -38,6 +40,7 @@ export type Database = {
           is_correct?: boolean
           question_id?: string
           selected_index?: number | null
+          text_answer?: string | null
         }
         Relationships: [
           {
@@ -159,34 +162,40 @@ export type Database = {
       }
       questions: {
         Row: {
-          choices: Json
-          correct_index: number
+          choices: Json | null
+          correct_index: number | null
           created_at: string
           explanation: string | null
           id: string
+          model_answer: string | null
           position: number
           prompt: string
           quiz_id: string
+          type: string
         }
         Insert: {
-          choices: Json
-          correct_index: number
+          choices?: Json | null
+          correct_index?: number | null
           created_at?: string
           explanation?: string | null
           id?: string
+          model_answer?: string | null
           position?: number
           prompt: string
           quiz_id: string
+          type?: string
         }
         Update: {
-          choices?: Json
-          correct_index?: number
+          choices?: Json | null
+          correct_index?: number | null
           created_at?: string
           explanation?: string | null
           id?: string
+          model_answer?: string | null
           position?: number
           prompt?: string
           quiz_id?: string
+          type?: string
         }
         Relationships: [
           {
