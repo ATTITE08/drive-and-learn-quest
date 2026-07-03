@@ -9,12 +9,12 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LEVELS, SUBJECTS, levelLabel, subjectLabel } from "@/lib/constants";
 import { toast } from "sonner";
 import { Sparkles, Upload, FileText, Trash2, Users } from "lucide-react";
+
 
 export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminPage,
