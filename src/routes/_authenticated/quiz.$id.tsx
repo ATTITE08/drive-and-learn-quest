@@ -25,8 +25,11 @@ function QuizPage() {
   const [selected, setSelected] = useState<number | null>(null);
   const [textAnswer, setTextAnswer] = useState("");
   const [revealed, setRevealed] = useState(false);
+  const [checked, setChecked] = useState<boolean[]>([]);
   const [selfMark, setSelfMark] = useState<boolean | null>(null);
-  const [score, setScore] = useState(0);
+  const [scored, setScored] = useState(false);
+  const [earnedPoints, setEarnedPoints] = useState(0);
+  const [totalPoints, setTotalPoints] = useState(0);
   const [finished, setFinished] = useState(false);
   const [startedAt] = useState(() => Date.now());
 
@@ -64,6 +67,24 @@ function QuizPage() {
   const isQcm = (q.type ?? "qcm") === "qcm";
   const choices = (q.choices as string[]) ?? [];
   const total = data.questions.length;
+  const criteria: { label: string; points: number }[] = Array.isArray(q.criteria)
+    ? (q.criteria as any[]).filter((c) => c && typeof c.label === "string").map((c) => ({ label: String(c.label), points: Number(c.points) || 1 }))
+    : [];
+  const questionPoints: number = Math.max(1, Number(q.points) || (criteria.length ? criteria.reduce((s, c) => s + c.points, 0) : 1));
+
+  const recordScore = async (earned: number, isCorrect: boolean, extra: Record<string, unknown> = {}) => {
+    setEarnedPoints((p) => p + earned);
+    setTotalPoints((p) => p + questionPoints);
+    setScored(true);
+    if (attemptId) {
+      await supabase.from("answers").insert({
+        attempt_id: attemptId,
+        question_id: q.id,
+        is_correct: isCorrect,
+        ...extra,
+      });
+    }
+  };
 
   const validate = async () => {
     if (revealed) return;
@@ -71,32 +92,26 @@ function QuizPage() {
       if (selected === null) return;
       const isCorrect = selected === q.correct_index;
       setRevealed(true);
-      if (isCorrect) setScore((s) => s + 1);
-      if (attemptId) {
-        await supabase.from("answers").insert({
-          attempt_id: attemptId,
-          question_id: q.id,
-          selected_index: selected,
-          is_correct: isCorrect,
-        });
-      }
+      await recordScore(isCorrect ? questionPoints : 0, isCorrect, { selected_index: selected });
     } else {
       if (!textAnswer.trim()) return;
       setRevealed(true);
+      setChecked(new Array(criteria.length).fill(false));
     }
+  };
+
+  const finalizeCriteria = async () => {
+    const earned = criteria.reduce((s, c, i) => s + (checked[i] ? c.points : 0), 0);
+    const isCorrect = questionPoints > 0 && earned / questionPoints >= 0.5;
+    await recordScore(earned, isCorrect, {
+      text_answer: textAnswer,
+      criteria_scores: criteria.map((c, i) => ({ label: c.label, points: c.points, checked: !!checked[i] })),
+    });
   };
 
   const submitSelfMark = async (ok: boolean) => {
     setSelfMark(ok);
-    if (ok) setScore((s) => s + 1);
-    if (attemptId) {
-      await supabase.from("answers").insert({
-        attempt_id: attemptId,
-        question_id: q.id,
-        text_answer: textAnswer,
-        is_correct: ok,
-      });
-    }
+    await recordScore(ok ? questionPoints : 0, ok, { text_answer: textAnswer });
   };
 
   const next = async () => {
@@ -106,11 +121,14 @@ function QuizPage() {
       setTextAnswer("");
       setRevealed(false);
       setSelfMark(null);
+      setChecked([]);
+      setScored(false);
     } else {
       const duration = Math.round((Date.now() - startedAt) / 1000);
       if (attemptId) {
+        // Legacy columns store points; keep consistent
         await supabase.from("attempts").update({
-          score, total, duration_seconds: duration, finished_at: new Date().toISOString(),
+          score: earnedPoints, total: totalPoints, duration_seconds: duration, finished_at: new Date().toISOString(),
         }).eq("id", attemptId);
       }
       setFinished(true);
@@ -118,7 +136,7 @@ function QuizPage() {
   };
 
   if (finished) {
-    const pct = Math.round((score / total) * 100);
+    const pct = totalPoints > 0 ? Math.round((earnedPoints / totalPoints) * 100) : 0;
     return (
       <div className="max-w-2xl mx-auto">
         <Card className="p-8 text-center">
@@ -127,7 +145,7 @@ function QuizPage() {
           <p className="mt-2 text-muted-foreground">{data.quiz.title}</p>
           <div className="mt-6 inline-flex items-baseline gap-2">
             <span className="font-display text-6xl font-bold">{pct}%</span>
-            <span className="text-muted-foreground">({score}/{total})</span>
+            <span className="text-muted-foreground">({earnedPoints}/{totalPoints} pts)</span>
           </div>
           <p className={cn("mt-4 font-medium", pct >= 70 ? "text-success" : pct >= 50 ? "text-amber" : "text-destructive")}>
             {pct >= 70 ? "Excellent travail !" : pct >= 50 ? "Vous pouvez encore progresser." : "Révision recommandée."}
@@ -141,7 +159,7 @@ function QuizPage() {
     );
   }
 
-  const canAdvance = isQcm ? revealed : revealed && selfMark !== null;
+  const canAdvance = isQcm ? revealed : revealed && scored;
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
@@ -151,6 +169,9 @@ function QuizPage() {
           <span className="rounded-md bg-amber/15 px-2 py-0.5 text-xs font-medium">{levelLabel(data.quiz.level)}</span>
           <span className={cn("rounded-md px-2 py-0.5 text-xs font-medium", isQcm ? "bg-secondary" : "bg-primary/10 text-primary")}>
             {isQcm ? "QCM" : "Cas pratique"}
+          </span>
+          <span className="rounded-md bg-secondary px-2 py-0.5 text-xs font-medium">
+            {questionPoints} pt{questionPoints > 1 ? "s" : ""}
           </span>
         </div>
         <h1 className="font-display text-2xl font-bold">{data.quiz.title}</h1>
@@ -195,20 +216,55 @@ function QuizPage() {
           </div>
         ) : (
           <div className="mt-5 space-y-3">
-            <Textarea
-              rows={6}
-              value={textAnswer}
-              onChange={(e) => setTextAnswer(e.target.value)}
-              disabled={revealed}
-              placeholder="Rédigez votre réponse : étapes, procédure, points de vigilance…"
-            />
+            <div>
+              <Label className="text-sm font-medium flex items-center gap-1">
+                <ClipboardCheck className="h-4 w-4" /> Votre réponse
+              </Label>
+              <Textarea
+                rows={8}
+                className="mt-1"
+                value={textAnswer}
+                onChange={(e) => setTextAnswer(e.target.value)}
+                disabled={revealed}
+                placeholder="Rédigez votre réponse : étapes, procédure, points de vigilance…"
+              />
+            </div>
             {revealed && q.model_answer && (
               <div className="rounded-md border-l-4 border-rail bg-rail/5 p-3 text-sm">
                 <strong>Réponse-type :</strong>
                 <p className="mt-1 whitespace-pre-line">{q.model_answer}</p>
               </div>
             )}
-            {revealed && selfMark === null && (
+            {revealed && !scored && criteria.length > 0 && (
+              <div className="rounded-md border p-4 space-y-3">
+                <div>
+                  <p className="text-sm font-medium">Barème — cochez les critères couverts par votre réponse</p>
+                  <p className="text-xs text-muted-foreground">Total : {questionPoints} pt{questionPoints > 1 ? "s" : ""}</p>
+                </div>
+                <div className="space-y-2">
+                  {criteria.map((c, i) => (
+                    <label key={i} className="flex items-start gap-3 rounded-md border p-2 cursor-pointer hover:bg-secondary/50">
+                      <Checkbox
+                        checked={!!checked[i]}
+                        onCheckedChange={(v) => setChecked((arr) => arr.map((x, idx) => (idx === i ? !!v : x)))}
+                        className="mt-0.5"
+                      />
+                      <span className="flex-1 text-sm">{c.label}</span>
+                      <span className="text-xs font-semibold text-muted-foreground shrink-0">
+                        {c.points} pt{c.points > 1 ? "s" : ""}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">
+                    Points obtenus : <strong>{criteria.reduce((s, c, i) => s + (checked[i] ? c.points : 0), 0)}</strong> / {questionPoints}
+                  </span>
+                  <Button size="sm" onClick={finalizeCriteria}>Valider l'auto-évaluation</Button>
+                </div>
+              </div>
+            )}
+            {revealed && !scored && criteria.length === 0 && selfMark === null && (
               <div className="rounded-md border p-3">
                 <p className="text-sm font-medium">Auto-évaluation : votre réponse couvre-t-elle l'essentiel ?</p>
                 <div className="mt-2 flex gap-2">
