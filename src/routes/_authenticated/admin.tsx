@@ -228,26 +228,7 @@ function DocumentRow({
   );
 }
 
-          <Input type="number" min={0} max={20} value={numQcm}
-            onChange={(e) => setNumQcm(Math.max(0, Math.min(20, Number(e.target.value) || 0)))}
-            className="w-16 h-8" />
-        </div>
-        <div className="flex items-center gap-1">
-          <Label className="text-xs">Cas prat.</Label>
-          <Input type="number" min={0} max={10} value={numCas}
-            onChange={(e) => setNumCas(Math.max(0, Math.min(10, Number(e.target.value) || 0)))}
-            className="w-16 h-8" />
-        </div>
-      </div>
-      <Button size="sm" onClick={() => onGenerate({ documentId: doc.id, numQcm, numCasPratique: numCas })} disabled={generating || (numQcm + numCas < 3)}>
-        <Sparkles className="h-4 w-4 mr-1" /> {generating ? "Génération…" : "Générer un questionnaire"}
-      </Button>
-      <Button size="sm" variant="ghost" onClick={() => onDelete(doc.id)}>
-        <Trash2 className="h-4 w-4" />
-      </Button>
-    </div>
-  );
-}
+
 
 
 function UsersAdmin() {
