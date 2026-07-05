@@ -166,6 +166,15 @@ Règles :
 
     const rows = questions.map((q, i) => {
       const isQcm = q.type === "qcm";
+      const criteria = !isQcm && Array.isArray(q.criteria)
+        ? q.criteria
+            .filter((c: any) => c && typeof c.label === "string" && Number(c.points) > 0)
+            .map((c: any) => ({ label: String(c.label), points: Math.max(1, Math.min(10, Math.round(Number(c.points)))) }))
+        : [];
+      const inferredPoints = criteria.reduce((s: number, c: any) => s + c.points, 0);
+      const points = isQcm
+        ? 1
+        : Math.max(1, Math.min(20, Number.isFinite(q.points) ? Math.round(q.points) : inferredPoints || 5));
       return {
         quiz_id: quiz.id,
         type: isQcm ? "qcm" : "cas_pratique",
@@ -174,6 +183,8 @@ Règles :
         correct_index: isQcm ? Math.max(0, Math.min(3, q.correct_index ?? 0)) : null,
         explanation: q.explanation ?? null,
         model_answer: !isQcm ? (q.model_answer ?? null) : null,
+        points,
+        criteria,
         position: i,
       };
     });
