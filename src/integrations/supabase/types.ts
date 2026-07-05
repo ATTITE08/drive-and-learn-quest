@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           attempt_id: string
           created_at: string
+          criteria_scores: Json | null
           id: string
           is_correct: boolean
           question_id: string
@@ -27,6 +28,7 @@ export type Database = {
         Insert: {
           attempt_id: string
           created_at?: string
+          criteria_scores?: Json | null
           id?: string
           is_correct?: boolean
           question_id: string
@@ -36,6 +38,7 @@ export type Database = {
         Update: {
           attempt_id?: string
           created_at?: string
+          criteria_scores?: Json | null
           id?: string
           is_correct?: boolean
           question_id?: string
@@ -165,9 +168,11 @@ export type Database = {
           choices: Json | null
           correct_index: number | null
           created_at: string
+          criteria: Json
           explanation: string | null
           id: string
           model_answer: string | null
+          points: number
           position: number
           prompt: string
           quiz_id: string
@@ -177,9 +182,11 @@ export type Database = {
           choices?: Json | null
           correct_index?: number | null
           created_at?: string
+          criteria?: Json
           explanation?: string | null
           id?: string
           model_answer?: string | null
+          points?: number
           position?: number
           prompt: string
           quiz_id: string
@@ -189,9 +196,11 @@ export type Database = {
           choices?: Json | null
           correct_index?: number | null
           created_at?: string
+          criteria?: Json
           explanation?: string | null
           id?: string
           model_answer?: string | null
+          points?: number
           position?: number
           prompt?: string
           quiz_id?: string
