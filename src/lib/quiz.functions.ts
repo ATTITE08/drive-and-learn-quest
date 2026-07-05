@@ -97,6 +97,20 @@ Règles :
                   correct_index: { type: "integer", minimum: 0, maximum: 3 },
                   explanation: { type: "string" },
                   model_answer: { type: "string" },
+                  points: { type: "integer", minimum: 1, maximum: 20 },
+                  criteria: {
+                    type: "array",
+                    description: "Critères d'évaluation (cas pratique uniquement). Chaque critère décrit un point-clé attendu dans la réponse et vaut un certain nombre de points.",
+                    items: {
+                      type: "object",
+                      properties: {
+                        label: { type: "string" },
+                        points: { type: "integer", minimum: 1, maximum: 10 },
+                      },
+                      required: ["label", "points"],
+                      additionalProperties: false,
+                    },
+                  },
                 },
                 required: ["type", "prompt"],
                 additionalProperties: false,
