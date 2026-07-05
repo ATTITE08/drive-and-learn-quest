@@ -13,7 +13,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LEVELS, SUBJECTS, levelLabel, subjectLabel } from "@/lib/constants";
 import { toast } from "sonner";
-import { Sparkles, Upload, FileText, Trash2, Users } from "lucide-react";
+import { Sparkles, Upload, FileText, Trash2, Users, SlidersHorizontal } from "lucide-react";
+import { RubricEditor } from "@/components/RubricEditor";
+
 
 
 export const Route = createFileRoute("/_authenticated/admin")({
