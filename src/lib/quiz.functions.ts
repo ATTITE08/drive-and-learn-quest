@@ -74,8 +74,8 @@ Composition demandée :
 Règles :
 - Fidélité stricte au contenu du document (procédures, chiffres, terminologie).
 - Vocabulaire technique ferroviaire approprié.
-- Chaque QCM inclut une explication brève (1-2 phrases).
-- Chaque cas pratique inclut une réponse-type structurée (étapes / points-clés attendus).
+- Chaque QCM inclut une explication brève (1-2 phrases) et vaut 1 point.
+- Chaque cas pratique inclut : une réponse-type structurée (model_answer), un barème total (points, entre 3 et 10) et 3 à 6 critères d'évaluation (label + points), chaque critère décrivant un élément précis attendu dans la réponse. La somme des points des critères doit égaler le total (points).
 - Ordonner les questions du plus simple au plus complexe.`;
 
     const tool = {
@@ -97,6 +97,20 @@ Règles :
                   correct_index: { type: "integer", minimum: 0, maximum: 3 },
                   explanation: { type: "string" },
                   model_answer: { type: "string" },
+                  points: { type: "integer", minimum: 1, maximum: 20 },
+                  criteria: {
+                    type: "array",
+                    description: "Critères d'évaluation (cas pratique uniquement). Chaque critère décrit un point-clé attendu dans la réponse et vaut un certain nombre de points.",
+                    items: {
+                      type: "object",
+                      properties: {
+                        label: { type: "string" },
+                        points: { type: "integer", minimum: 1, maximum: 10 },
+                      },
+                      required: ["label", "points"],
+                      additionalProperties: false,
+                    },
+                  },
                 },
                 required: ["type", "prompt"],
                 additionalProperties: false,
@@ -152,6 +166,15 @@ Règles :
 
     const rows = questions.map((q, i) => {
       const isQcm = q.type === "qcm";
+      const criteria = !isQcm && Array.isArray(q.criteria)
+        ? q.criteria
+            .filter((c: any) => c && typeof c.label === "string" && Number(c.points) > 0)
+            .map((c: any) => ({ label: String(c.label), points: Math.max(1, Math.min(10, Math.round(Number(c.points)))) }))
+        : [];
+      const inferredPoints = criteria.reduce((s: number, c: any) => s + c.points, 0);
+      const points = isQcm
+        ? 1
+        : Math.max(1, Math.min(20, Number.isFinite(q.points) ? Math.round(q.points) : inferredPoints || 5));
       return {
         quiz_id: quiz.id,
         type: isQcm ? "qcm" : "cas_pratique",
@@ -160,6 +183,8 @@ Règles :
         correct_index: isQcm ? Math.max(0, Math.min(3, q.correct_index ?? 0)) : null,
         explanation: q.explanation ?? null,
         model_answer: !isQcm ? (q.model_answer ?? null) : null,
+        points,
+        criteria,
         position: i,
       };
     });

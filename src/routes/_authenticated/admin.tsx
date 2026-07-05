@@ -13,7 +13,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LEVELS, SUBJECTS, levelLabel, subjectLabel } from "@/lib/constants";
 import { toast } from "sonner";
-import { Sparkles, Upload, FileText, Trash2, Users } from "lucide-react";
+import { Sparkles, Upload, FileText, Trash2, Users, SlidersHorizontal } from "lucide-react";
+import { RubricEditor } from "@/components/RubricEditor";
+
 
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -185,6 +187,8 @@ function DocumentRow({
 }) {
   const [numQcm, setNumQcm] = useState(6);
   const [numCas, setNumCas] = useState(2);
+  const [rubricQuizId, setRubricQuizId] = useState<string | null>(null);
+  const firstQuizId = doc.quizzes?.[0]?.id ?? null;
   return (
     <div className="flex flex-wrap items-center gap-3 rounded-lg border p-3">
       <FileText className="h-5 w-5 text-rail" />
@@ -211,12 +215,20 @@ function DocumentRow({
       <Button size="sm" onClick={() => onGenerate({ documentId: doc.id, numQcm, numCasPratique: numCas })} disabled={generating || (numQcm + numCas < 3)}>
         <Sparkles className="h-4 w-4 mr-1" /> {generating ? "Génération…" : "Générer un questionnaire"}
       </Button>
+      {firstQuizId && (
+        <Button size="sm" variant="outline" onClick={() => setRubricQuizId(firstQuizId)}>
+          <SlidersHorizontal className="h-4 w-4 mr-1" /> Barème
+        </Button>
+      )}
       <Button size="sm" variant="ghost" onClick={() => onDelete(doc.id)}>
         <Trash2 className="h-4 w-4" />
       </Button>
+      <RubricEditor quizId={rubricQuizId} open={!!rubricQuizId} onOpenChange={(v) => !v && setRubricQuizId(null)} />
     </div>
   );
 }
+
+
 
 
 function UsersAdmin() {
