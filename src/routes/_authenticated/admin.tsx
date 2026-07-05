@@ -187,6 +187,8 @@ function DocumentRow({
 }) {
   const [numQcm, setNumQcm] = useState(6);
   const [numCas, setNumCas] = useState(2);
+  const [rubricQuizId, setRubricQuizId] = useState<string | null>(null);
+  const firstQuizId = doc.quizzes?.[0]?.id ?? null;
   return (
     <div className="flex flex-wrap items-center gap-3 rounded-lg border p-3">
       <FileText className="h-5 w-5 text-rail" />
@@ -199,6 +201,33 @@ function DocumentRow({
       <div className="flex items-center gap-2">
         <div className="flex items-center gap-1">
           <Label className="text-xs">QCM</Label>
+          <Input type="number" min={0} max={20} value={numQcm}
+            onChange={(e) => setNumQcm(Math.max(0, Math.min(20, Number(e.target.value) || 0)))}
+            className="w-16 h-8" />
+        </div>
+        <div className="flex items-center gap-1">
+          <Label className="text-xs">Cas prat.</Label>
+          <Input type="number" min={0} max={10} value={numCas}
+            onChange={(e) => setNumCas(Math.max(0, Math.min(10, Number(e.target.value) || 0)))}
+            className="w-16 h-8" />
+        </div>
+      </div>
+      <Button size="sm" onClick={() => onGenerate({ documentId: doc.id, numQcm, numCasPratique: numCas })} disabled={generating || (numQcm + numCas < 3)}>
+        <Sparkles className="h-4 w-4 mr-1" /> {generating ? "Génération…" : "Générer un questionnaire"}
+      </Button>
+      {firstQuizId && (
+        <Button size="sm" variant="outline" onClick={() => setRubricQuizId(firstQuizId)}>
+          <SlidersHorizontal className="h-4 w-4 mr-1" /> Barème
+        </Button>
+      )}
+      <Button size="sm" variant="ghost" onClick={() => onDelete(doc.id)}>
+        <Trash2 className="h-4 w-4" />
+      </Button>
+      <RubricEditor quizId={rubricQuizId} open={!!rubricQuizId} onOpenChange={(v) => !v && setRubricQuizId(null)} />
+    </div>
+  );
+}
+
           <Input type="number" min={0} max={20} value={numQcm}
             onChange={(e) => setNumQcm(Math.max(0, Math.min(20, Number(e.target.value) || 0)))}
             className="w-16 h-8" />
