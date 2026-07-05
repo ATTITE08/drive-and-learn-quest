@@ -74,8 +74,8 @@ Composition demandée :
 Règles :
 - Fidélité stricte au contenu du document (procédures, chiffres, terminologie).
 - Vocabulaire technique ferroviaire approprié.
-- Chaque QCM inclut une explication brève (1-2 phrases).
-- Chaque cas pratique inclut une réponse-type structurée (étapes / points-clés attendus).
+- Chaque QCM inclut une explication brève (1-2 phrases) et vaut 1 point.
+- Chaque cas pratique inclut : une réponse-type structurée (model_answer), un barème total (points, entre 3 et 10) et 3 à 6 critères d'évaluation (label + points), chaque critère décrivant un élément précis attendu dans la réponse. La somme des points des critères doit égaler le total (points).
 - Ordonner les questions du plus simple au plus complexe.`;
 
     const tool = {
