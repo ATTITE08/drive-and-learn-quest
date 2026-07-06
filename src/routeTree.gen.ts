@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedReviewRouteImport } from './routes/_authenticated/review'
 import { Route as AuthenticatedResultsRouteImport } from './routes/_authenticated/results'
 import { Route as AuthenticatedQuizzesRouteImport } from './routes/_authenticated/quizzes'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -31,6 +32,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedReviewRoute = AuthenticatedReviewRouteImport.update({
+  id: '/review',
+  path: '/review',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedResultsRoute = AuthenticatedResultsRouteImport.update({
   id: '/results',
@@ -65,6 +71,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/quizzes': typeof AuthenticatedQuizzesRoute
   '/results': typeof AuthenticatedResultsRoute
+  '/review': typeof AuthenticatedReviewRoute
   '/quiz/$id': typeof AuthenticatedQuizIdRoute
 }
 export interface FileRoutesByTo {
@@ -74,6 +81,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/quizzes': typeof AuthenticatedQuizzesRoute
   '/results': typeof AuthenticatedResultsRoute
+  '/review': typeof AuthenticatedReviewRoute
   '/quiz/$id': typeof AuthenticatedQuizIdRoute
 }
 export interface FileRoutesById {
@@ -85,6 +93,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/quizzes': typeof AuthenticatedQuizzesRoute
   '/_authenticated/results': typeof AuthenticatedResultsRoute
+  '/_authenticated/review': typeof AuthenticatedReviewRoute
   '/_authenticated/quiz/$id': typeof AuthenticatedQuizIdRoute
 }
 export interface FileRouteTypes {
@@ -96,6 +105,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/quizzes'
     | '/results'
+    | '/review'
     | '/quiz/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -105,6 +115,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/quizzes'
     | '/results'
+    | '/review'
     | '/quiz/$id'
   id:
     | '__root__'
@@ -115,6 +126,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/quizzes'
     | '/_authenticated/results'
+    | '/_authenticated/review'
     | '/_authenticated/quiz/$id'
   fileRoutesById: FileRoutesById
 }
@@ -146,6 +158,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/review': {
+      id: '/_authenticated/review'
+      path: '/review'
+      fullPath: '/review'
+      preLoaderRoute: typeof AuthenticatedReviewRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/results': {
       id: '/_authenticated/results'
@@ -190,6 +209,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedQuizzesRoute: typeof AuthenticatedQuizzesRoute
   AuthenticatedResultsRoute: typeof AuthenticatedResultsRoute
+  AuthenticatedReviewRoute: typeof AuthenticatedReviewRoute
   AuthenticatedQuizIdRoute: typeof AuthenticatedQuizIdRoute
 }
 
@@ -198,6 +218,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedQuizzesRoute: AuthenticatedQuizzesRoute,
   AuthenticatedResultsRoute: AuthenticatedResultsRoute,
+  AuthenticatedReviewRoute: AuthenticatedReviewRoute,
   AuthenticatedQuizIdRoute: AuthenticatedQuizIdRoute,
 }
 
