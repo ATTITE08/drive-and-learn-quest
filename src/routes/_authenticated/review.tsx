@@ -37,12 +37,20 @@ function ReviewPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("attempts")
-        .select("id,score,total,finished_at,created_at,user_id,profiles!attempts_user_id_fkey(full_name,email)")
+        .select("id,score,total,finished_at,created_at,user_id")
         .eq("quiz_id", quizId)
         .not("finished_at", "is", null)
         .order("finished_at", { ascending: false });
       if (error) throw error;
-      return data ?? [];
+      const rows = data ?? [];
+      if (!rows.length) return rows;
+      const ids = Array.from(new Set(rows.map((r: any) => r.user_id)));
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id,full_name,email")
+        .in("id", ids);
+      const byId = new Map((profiles ?? []).map((p: any) => [p.id, p]));
+      return rows.map((r: any) => ({ ...r, profiles: byId.get(r.user_id) ?? null }));
     },
   });
 

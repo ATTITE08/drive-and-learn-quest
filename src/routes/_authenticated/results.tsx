@@ -21,13 +21,23 @@ function Results() {
     queryFn: async () => {
       let q = supabase
         .from("attempts")
-        .select("id,score,total,duration_seconds,finished_at,created_at,user_id,quizzes(title,subject,level),profiles!attempts_user_id_fkey(full_name,email)")
+        .select("id,score,total,duration_seconds,finished_at,created_at,user_id,quizzes(title,subject,level)")
         .not("finished_at", "is", null)
         .order("finished_at", { ascending: false });
       if (!isStaff) q = q.eq("user_id", roleData!.userId);
-      const { data, error } = await q;
+      const { data: attempts, error } = await q;
       if (error) throw error;
-      return data ?? [];
+      const rows = attempts ?? [];
+      if (!isStaff || rows.length === 0) {
+        return rows.map((r: any) => ({ ...r, profiles: null }));
+      }
+      const ids = Array.from(new Set(rows.map((r: any) => r.user_id)));
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id,full_name,email")
+        .in("id", ids);
+      const byId = new Map((profiles ?? []).map((p: any) => [p.id, p]));
+      return rows.map((r: any) => ({ ...r, profiles: byId.get(r.user_id) ?? null }));
     },
   });
 
