@@ -31,8 +31,13 @@ export const generateQuizFromDocument = createServerFn({ method: "POST" })
       throw new Error("Générez au moins 3 questions au total.");
     }
 
-    const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: userId, _role: "admin" });
-    if (!isAdmin) throw new Error("Réservé aux administrateurs");
+    const { data: roleRow } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .eq("role", "admin")
+      .maybeSingle();
+    if (!roleRow) throw new Error("Réservé aux administrateurs");
 
     const { data: doc, error: docErr } = await supabase
       .from("documents")
