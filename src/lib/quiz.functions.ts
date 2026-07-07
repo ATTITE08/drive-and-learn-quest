@@ -31,8 +31,13 @@ export const generateQuizFromDocument = createServerFn({ method: "POST" })
       throw new Error("Générez au moins 3 questions au total.");
     }
 
-    const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: userId, _role: "admin" });
-    if (!isAdmin) throw new Error("Réservé aux administrateurs");
+    const { data: roleRow } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .eq("role", "admin")
+      .maybeSingle();
+    if (!roleRow) throw new Error("Réservé aux administrateurs");
 
     const { data: doc, error: docErr } = await supabase
       .from("documents")
@@ -192,4 +197,166 @@ Règles :
     if (insErr) throw new Error(insErr.message);
 
     return { quizId: quiz.id, count: rows.length };
+  });
+
+// ---------------------------------------------------------------------------
+// Safe question fetcher for quiz-takers: strips correct_index, model_answer,
+// and QCM explanation before returning to the client.
+// ---------------------------------------------------------------------------
+export const getQuizForAttempt = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ quizId: z.string().uuid() }).parse(data))
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    const { data: quiz, error: qErr } = await supabase
+      .from("quizzes")
+      .select("id,title,subject,level")
+      .eq("id", data.quizId)
+      .maybeSingle();
+    if (qErr) throw new Error(qErr.message);
+    if (!quiz) throw new Error("Questionnaire introuvable");
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: qs, error: qsErr } = await supabaseAdmin
+      .from("questions")
+      .select("id,quiz_id,type,prompt,choices,points,criteria,position")
+      .eq("quiz_id", data.quizId)
+      .order("position");
+    if (qsErr) throw new Error(qsErr.message);
+
+    return { quiz, questions: qs ?? [] };
+  });
+
+// ---------------------------------------------------------------------------
+// Server-side QCM scoring. Verifies attempt ownership, then reveals the
+// correct index / explanation only after storing the answer.
+// ---------------------------------------------------------------------------
+const ScoreQcmSchema = z.object({
+  attemptId: z.string().uuid(),
+  questionId: z.string().uuid(),
+  selectedIndex: z.number().int().min(0).max(20),
+});
+
+export const scoreQcmAnswer = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => ScoreQcmSchema.parse(data))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+
+    const { data: attempt, error: aErr } = await supabase
+      .from("attempts")
+      .select("id,user_id,quiz_id")
+      .eq("id", data.attemptId)
+      .maybeSingle();
+    if (aErr) throw new Error(aErr.message);
+    if (!attempt || attempt.user_id !== userId) throw new Error("Tentative introuvable");
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: q, error: qErr } = await supabaseAdmin
+      .from("questions")
+      .select("id,type,quiz_id,correct_index,explanation,points")
+      .eq("id", data.questionId)
+      .maybeSingle();
+    if (qErr || !q) throw new Error("Question introuvable");
+    if (q.quiz_id !== attempt.quiz_id) throw new Error("Question hors questionnaire");
+    if ((q.type ?? "qcm") !== "qcm") throw new Error("Question non QCM");
+
+    const isCorrect = data.selectedIndex === q.correct_index;
+    const { error: insErr } = await supabase.from("answers").insert({
+      attempt_id: data.attemptId,
+      question_id: data.questionId,
+      is_correct: isCorrect,
+      selected_index: data.selectedIndex,
+    });
+    if (insErr) throw new Error(insErr.message);
+
+    return {
+      isCorrect,
+      correctIndex: q.correct_index,
+      explanation: q.explanation ?? null,
+      points: Math.max(1, q.points ?? 1),
+    };
+  });
+
+// ---------------------------------------------------------------------------
+// Reveal the model answer for a cas pratique once the user has submitted a
+// text answer. Returns model_answer / criteria for self-evaluation.
+// ---------------------------------------------------------------------------
+const RevealCaseSchema = z.object({
+  attemptId: z.string().uuid(),
+  questionId: z.string().uuid(),
+  textAnswer: z.string().min(1).max(20000),
+});
+
+export const revealCaseAnswer = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => RevealCaseSchema.parse(data))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: attempt, error: aErr } = await supabase
+      .from("attempts").select("id,user_id,quiz_id").eq("id", data.attemptId).maybeSingle();
+    if (aErr) throw new Error(aErr.message);
+    if (!attempt || attempt.user_id !== userId) throw new Error("Tentative introuvable");
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: q, error: qErr } = await supabaseAdmin
+      .from("questions").select("id,type,quiz_id,model_answer,criteria,points")
+      .eq("id", data.questionId).maybeSingle();
+    if (qErr || !q) throw new Error("Question introuvable");
+    if (q.quiz_id !== attempt.quiz_id) throw new Error("Question hors questionnaire");
+
+    return {
+      modelAnswer: q.model_answer ?? null,
+      criteria: Array.isArray(q.criteria) ? q.criteria : [],
+      points: Math.max(1, q.points ?? 1),
+    };
+  });
+
+// ---------------------------------------------------------------------------
+// Record final scoring for a cas pratique after user self-evaluation.
+// ---------------------------------------------------------------------------
+const SubmitCaseSchema = z.object({
+  attemptId: z.string().uuid(),
+  questionId: z.string().uuid(),
+  textAnswer: z.string().min(1).max(20000),
+  criteriaScores: z.array(z.object({
+    label: z.string(),
+    points: z.number().int().min(0).max(50),
+    checked: z.boolean(),
+  })).max(20),
+  selfMark: z.boolean().optional(),
+});
+
+export const submitCaseAnswer = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => SubmitCaseSchema.parse(data))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: attempt } = await supabase
+      .from("attempts").select("id,user_id,quiz_id").eq("id", data.attemptId).maybeSingle();
+    if (!attempt || attempt.user_id !== userId) throw new Error("Tentative introuvable");
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: q } = await supabaseAdmin
+      .from("questions").select("id,quiz_id,points").eq("id", data.questionId).maybeSingle();
+    if (!q || q.quiz_id !== attempt.quiz_id) throw new Error("Question hors questionnaire");
+
+    const totalPoints = Math.max(1, q.points ?? 1);
+    const earned = data.criteriaScores.length > 0
+      ? data.criteriaScores.reduce((s, c) => s + (c.checked ? c.points : 0), 0)
+      : (data.selfMark ? totalPoints : 0);
+    const isCorrect = data.criteriaScores.length > 0
+      ? earned / totalPoints >= 0.5
+      : !!data.selfMark;
+
+    const { error: insErr } = await supabase.from("answers").insert({
+      attempt_id: data.attemptId,
+      question_id: data.questionId,
+      is_correct: isCorrect,
+      text_answer: data.textAnswer,
+      criteria_scores: data.criteriaScores,
+    });
+    if (insErr) throw new Error(insErr.message);
+
+    return { earned, totalPoints, isCorrect };
   });

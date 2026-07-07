@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
@@ -12,6 +13,12 @@ import { levelLabel, subjectLabel } from "@/lib/constants";
 import { CheckCircle2, XCircle, ArrowRight, Trophy, ClipboardCheck } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import {
+  getQuizForAttempt,
+  scoreQcmAnswer,
+  revealCaseAnswer,
+  submitCaseAnswer,
+} from "@/lib/quiz.functions";
 
 export const Route = createFileRoute("/_authenticated/quiz/$id")({
   component: QuizPage,
@@ -20,6 +27,11 @@ export const Route = createFileRoute("/_authenticated/quiz/$id")({
 function QuizPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
+  const fetchQuiz = useServerFn(getQuizForAttempt);
+  const scoreQcm = useServerFn(scoreQcmAnswer);
+  const revealCase = useServerFn(revealCaseAnswer);
+  const submitCase = useServerFn(submitCaseAnswer);
+
   const [attemptId, setAttemptId] = useState<string | null>(null);
   const [current, setCurrent] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
@@ -32,16 +44,14 @@ function QuizPage() {
   const [totalPoints, setTotalPoints] = useState(0);
   const [finished, setFinished] = useState(false);
   const [startedAt] = useState(() => Date.now());
+  // Server-revealed answer keys, populated only after the user submits.
+  const [revealedCorrectIndex, setRevealedCorrectIndex] = useState<number | null>(null);
+  const [revealedExplanation, setRevealedExplanation] = useState<string | null>(null);
+  const [revealedModelAnswer, setRevealedModelAnswer] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["quiz", id],
-    queryFn: async () => {
-      const [{ data: quiz }, { data: questions }] = await Promise.all([
-        supabase.from("quizzes").select("*").eq("id", id).single(),
-        supabase.from("questions").select("*").eq("quiz_id", id).order("position"),
-      ]);
-      return { quiz, questions: questions ?? [] };
-    },
+    queryKey: ["quiz-attempt", id],
+    queryFn: () => fetchQuiz({ data: { quizId: id } }),
   });
 
   useEffect(() => {
@@ -72,46 +82,76 @@ function QuizPage() {
     : [];
   const questionPoints: number = Math.max(1, Number(q.points) || (criteria.length ? criteria.reduce((s, c) => s + c.points, 0) : 1));
 
-  const recordScore = async (earned: number, isCorrect: boolean, extra: Record<string, unknown> = {}) => {
-    setEarnedPoints((p) => p + earned);
-    setTotalPoints((p) => p + questionPoints);
-    setScored(true);
-    if (attemptId) {
-      await supabase.from("answers").insert({
-        attempt_id: attemptId,
-        question_id: q.id,
-        is_correct: isCorrect,
-        ...extra,
-      });
-    }
-  };
-
   const validate = async () => {
-    if (revealed) return;
+    if (revealed || !attemptId) return;
     if (isQcm) {
       if (selected === null) return;
-      const isCorrect = selected === q.correct_index;
-      setRevealed(true);
-      await recordScore(isCorrect ? questionPoints : 0, isCorrect, { selected_index: selected });
+      try {
+        const res = await scoreQcm({
+          data: { attemptId, questionId: q.id, selectedIndex: selected },
+        });
+        setRevealedCorrectIndex(res.correctIndex);
+        setRevealedExplanation(res.explanation);
+        setEarnedPoints((p) => p + (res.isCorrect ? res.points : 0));
+        setTotalPoints((p) => p + res.points);
+        setScored(true);
+        setRevealed(true);
+      } catch (e: any) {
+        toast.error(e.message ?? "Erreur de validation");
+      }
     } else {
       if (!textAnswer.trim()) return;
-      setRevealed(true);
-      setChecked(new Array(criteria.length).fill(false));
+      try {
+        const res = await revealCase({
+          data: { attemptId, questionId: q.id, textAnswer },
+        });
+        setRevealedModelAnswer(res.modelAnswer);
+        setChecked(new Array(criteria.length).fill(false));
+        setRevealed(true);
+      } catch (e: any) {
+        toast.error(e.message ?? "Erreur de validation");
+      }
     }
   };
 
   const finalizeCriteria = async () => {
-    const earned = criteria.reduce((s, c, i) => s + (checked[i] ? c.points : 0), 0);
-    const isCorrect = questionPoints > 0 && earned / questionPoints >= 0.5;
-    await recordScore(earned, isCorrect, {
-      text_answer: textAnswer,
-      criteria_scores: criteria.map((c, i) => ({ label: c.label, points: c.points, checked: !!checked[i] })),
-    });
+    if (!attemptId) return;
+    try {
+      const res = await submitCase({
+        data: {
+          attemptId,
+          questionId: q.id,
+          textAnswer,
+          criteriaScores: criteria.map((c, i) => ({ label: c.label, points: c.points, checked: !!checked[i] })),
+        },
+      });
+      setEarnedPoints((p) => p + res.earned);
+      setTotalPoints((p) => p + res.totalPoints);
+      setScored(true);
+    } catch (e: any) {
+      toast.error(e.message ?? "Erreur d'enregistrement");
+    }
   };
 
   const submitSelfMark = async (ok: boolean) => {
+    if (!attemptId) return;
     setSelfMark(ok);
-    await recordScore(ok ? questionPoints : 0, ok, { text_answer: textAnswer });
+    try {
+      const res = await submitCase({
+        data: {
+          attemptId,
+          questionId: q.id,
+          textAnswer,
+          criteriaScores: [],
+          selfMark: ok,
+        },
+      });
+      setEarnedPoints((p) => p + res.earned);
+      setTotalPoints((p) => p + res.totalPoints);
+      setScored(true);
+    } catch (e: any) {
+      toast.error(e.message ?? "Erreur d'enregistrement");
+    }
   };
 
   const next = async () => {
@@ -123,10 +163,12 @@ function QuizPage() {
       setSelfMark(null);
       setChecked([]);
       setScored(false);
+      setRevealedCorrectIndex(null);
+      setRevealedExplanation(null);
+      setRevealedModelAnswer(null);
     } else {
       const duration = Math.round((Date.now() - startedAt) / 1000);
       if (attemptId) {
-        // Legacy columns store points; keep consistent
         await supabase.from("attempts").update({
           score: earnedPoints, total: totalPoints, duration_seconds: duration, finished_at: new Date().toISOString(),
         }).eq("id", attemptId);
@@ -188,7 +230,7 @@ function QuizPage() {
           <div className="mt-5 space-y-2">
             {choices.map((c, i) => {
               const isSelected = selected === i;
-              const isCorrect = i === q.correct_index;
+              const isCorrect = revealedCorrectIndex !== null && i === revealedCorrectIndex;
               const showCorrect = revealed && isCorrect;
               const showWrong = revealed && isSelected && !isCorrect;
               return (
@@ -229,10 +271,10 @@ function QuizPage() {
                 placeholder="Rédigez votre réponse : étapes, procédure, points de vigilance…"
               />
             </div>
-            {revealed && q.model_answer && (
+            {revealed && revealedModelAnswer && (
               <div className="rounded-md border-l-4 border-rail bg-rail/5 p-3 text-sm">
                 <strong>Réponse-type :</strong>
-                <p className="mt-1 whitespace-pre-line">{q.model_answer}</p>
+                <p className="mt-1 whitespace-pre-line">{revealedModelAnswer}</p>
               </div>
             )}
             {revealed && !scored && criteria.length > 0 && (
@@ -280,9 +322,9 @@ function QuizPage() {
           </div>
         )}
 
-        {revealed && isQcm && q.explanation && (
+        {revealed && isQcm && revealedExplanation && (
           <div className="mt-4 rounded-md border-l-4 border-amber bg-amber/5 p-3 text-sm">
-            <strong>Explication :</strong> {q.explanation}
+            <strong>Explication :</strong> {revealedExplanation}
           </div>
         )}
 
