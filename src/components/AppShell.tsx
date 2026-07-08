@@ -22,8 +22,11 @@ export function AppShell({ children, role }: { children: ReactNode; role: AppRol
     { to: "/quizzes", label: "Questionnaires" },
     { to: "/results", label: role === "agent" ? "Mes résultats" : "Résultats" },
   ];
-  if (role === "admin" || role === "formateur") nav.push({ to: "/review", label: "Réponses" });
-  if (role === "admin") nav.push({ to: "/admin", label: "Administration" });
+    if (role === "admin" || role === "formateur") {
+      nav.push({ to: "/review", label: "Réponses" });
+      nav.push({ to: "/builder", label: "Créer un quiz" });
+    }
+    if (role === "admin") nav.push({ to: "/admin", label: "Administration" });
 
   const signOut = async () => {
     await queryClient.cancelQueries();
