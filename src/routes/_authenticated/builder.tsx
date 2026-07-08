@@ -107,7 +107,7 @@ function BuilderPage() {
     return null;
   };
 
-  const save = async () => {
+  const save = async (publish: boolean) => {
     const err = validate();
     if (err) return toast.error(err);
     setBusy(true);
@@ -120,8 +120,11 @@ function BuilderPage() {
           subject: subject as any,
           level: level as any,
           created_by: u.user!.id,
-        })
-        .select("id")
+          status: publish ? "published" : "draft",
+          current_version: publish ? 1 : 0,
+          published_at: publish ? new Date().toISOString() : null,
+        } as any)
+        .select("id,title,subject,level")
         .single();
       if (qErr || !quiz) throw new Error(qErr?.message ?? "Création questionnaire échouée");
 
@@ -159,7 +162,20 @@ function BuilderPage() {
       const { error: insErr } = await supabase.from("questions").insert(rows);
       if (insErr) throw new Error(insErr.message);
 
-      toast.success("Questionnaire créé");
+      if (publish) {
+        const { error: vErr } = await supabase.from("quiz_versions").insert({
+          quiz_id: quiz.id,
+          version: 1,
+          title: quiz.title,
+          subject: quiz.subject,
+          level: quiz.level,
+          questions: rows as any,
+          published_by: u.user!.id,
+        } as any);
+        if (vErr) throw new Error(vErr.message);
+      }
+
+      toast.success(publish ? "Questionnaire publié" : "Brouillon enregistré");
       navigate({ to: "/quizzes" });
     } catch (e: any) {
       toast.error(e.message ?? "Échec");
@@ -313,9 +329,12 @@ function BuilderPage() {
         <Button variant="outline" onClick={() => setQuestions((qs) => [...qs, newCas()])}>
           <Plus className="h-4 w-4 mr-1" /> Ajouter un cas pratique
         </Button>
-        <div className="ml-auto">
-          <Button onClick={save} disabled={busy}>
-            <Save className="h-4 w-4 mr-1" /> {busy ? "Enregistrement…" : "Enregistrer le questionnaire"}
+        <div className="ml-auto flex gap-2">
+          <Button variant="outline" onClick={() => save(false)} disabled={busy}>
+            <Save className="h-4 w-4 mr-1" /> {busy ? "…" : "Enregistrer brouillon"}
+          </Button>
+          <Button onClick={() => save(true)} disabled={busy}>
+            <Save className="h-4 w-4 mr-1" /> {busy ? "…" : "Publier"}
           </Button>
         </div>
       </div>

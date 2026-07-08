@@ -216,31 +216,84 @@ export type Database = {
           },
         ]
       }
+      quiz_versions: {
+        Row: {
+          id: string
+          level: Database["public"]["Enums"]["agent_level"]
+          published_at: string
+          published_by: string | null
+          questions: Json
+          quiz_id: string
+          subject: Database["public"]["Enums"]["subject"]
+          title: string
+          version: number
+        }
+        Insert: {
+          id?: string
+          level: Database["public"]["Enums"]["agent_level"]
+          published_at?: string
+          published_by?: string | null
+          questions?: Json
+          quiz_id: string
+          subject: Database["public"]["Enums"]["subject"]
+          title: string
+          version: number
+        }
+        Update: {
+          id?: string
+          level?: Database["public"]["Enums"]["agent_level"]
+          published_at?: string
+          published_by?: string | null
+          questions?: Json
+          quiz_id?: string
+          subject?: Database["public"]["Enums"]["subject"]
+          title?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_versions_quiz_id_fkey"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "quizzes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       quizzes: {
         Row: {
           created_at: string
           created_by: string | null
+          current_version: number
           document_id: string | null
           id: string
           level: Database["public"]["Enums"]["agent_level"]
+          published_at: string | null
+          status: Database["public"]["Enums"]["quiz_status"]
           subject: Database["public"]["Enums"]["subject"]
           title: string
         }
         Insert: {
           created_at?: string
           created_by?: string | null
+          current_version?: number
           document_id?: string | null
           id?: string
           level: Database["public"]["Enums"]["agent_level"]
+          published_at?: string | null
+          status?: Database["public"]["Enums"]["quiz_status"]
           subject: Database["public"]["Enums"]["subject"]
           title: string
         }
         Update: {
           created_at?: string
           created_by?: string | null
+          current_version?: number
           document_id?: string | null
           id?: string
           level?: Database["public"]["Enums"]["agent_level"]
+          published_at?: string | null
+          status?: Database["public"]["Enums"]["quiz_status"]
           subject?: Database["public"]["Enums"]["subject"]
           title?: string
         }
@@ -289,6 +342,7 @@ export type Database = {
         | "conducteur_ligne"
         | "chef_traction"
       app_role: "admin" | "formateur" | "agent"
+      quiz_status: "draft" | "published"
       subject: "igs" | "prac" | "frein" | "technologies"
     }
     CompositeTypes: {
@@ -424,6 +478,7 @@ export const Constants = {
         "chef_traction",
       ],
       app_role: ["admin", "formateur", "agent"],
+      quiz_status: ["draft", "published"],
       subject: ["igs", "prac", "frein", "technologies"],
     },
   },

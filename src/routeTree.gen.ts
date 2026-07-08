@@ -19,6 +19,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedBuilderRouteImport } from './routes/_authenticated/builder'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedQuizIdRouteImport } from './routes/_authenticated/quiz.$id'
+import { Route as AuthenticatedQuizzesIdVersionsRouteImport } from './routes/_authenticated/quizzes.$id.versions'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -69,6 +70,12 @@ const AuthenticatedQuizIdRoute = AuthenticatedQuizIdRouteImport.update({
   path: '/quiz/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedQuizzesIdVersionsRoute =
+  AuthenticatedQuizzesIdVersionsRouteImport.update({
+    id: '/$id/versions',
+    path: '/$id/versions',
+    getParentRoute: () => AuthenticatedQuizzesRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -76,10 +83,11 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRoute
   '/builder': typeof AuthenticatedBuilderRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/quizzes': typeof AuthenticatedQuizzesRoute
+  '/quizzes': typeof AuthenticatedQuizzesRouteWithChildren
   '/results': typeof AuthenticatedResultsRoute
   '/review': typeof AuthenticatedReviewRoute
   '/quiz/$id': typeof AuthenticatedQuizIdRoute
+  '/quizzes/$id/versions': typeof AuthenticatedQuizzesIdVersionsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -87,10 +95,11 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminRoute
   '/builder': typeof AuthenticatedBuilderRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/quizzes': typeof AuthenticatedQuizzesRoute
+  '/quizzes': typeof AuthenticatedQuizzesRouteWithChildren
   '/results': typeof AuthenticatedResultsRoute
   '/review': typeof AuthenticatedReviewRoute
   '/quiz/$id': typeof AuthenticatedQuizIdRoute
+  '/quizzes/$id/versions': typeof AuthenticatedQuizzesIdVersionsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -100,10 +109,11 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/builder': typeof AuthenticatedBuilderRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
-  '/_authenticated/quizzes': typeof AuthenticatedQuizzesRoute
+  '/_authenticated/quizzes': typeof AuthenticatedQuizzesRouteWithChildren
   '/_authenticated/results': typeof AuthenticatedResultsRoute
   '/_authenticated/review': typeof AuthenticatedReviewRoute
   '/_authenticated/quiz/$id': typeof AuthenticatedQuizIdRoute
+  '/_authenticated/quizzes/$id/versions': typeof AuthenticatedQuizzesIdVersionsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -117,6 +127,7 @@ export interface FileRouteTypes {
     | '/results'
     | '/review'
     | '/quiz/$id'
+    | '/quizzes/$id/versions'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -128,6 +139,7 @@ export interface FileRouteTypes {
     | '/results'
     | '/review'
     | '/quiz/$id'
+    | '/quizzes/$id/versions'
   id:
     | '__root__'
     | '/'
@@ -140,6 +152,7 @@ export interface FileRouteTypes {
     | '/_authenticated/results'
     | '/_authenticated/review'
     | '/_authenticated/quiz/$id'
+    | '/_authenticated/quizzes/$id/versions'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -220,14 +233,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedQuizIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/quizzes/$id/versions': {
+      id: '/_authenticated/quizzes/$id/versions'
+      path: '/$id/versions'
+      fullPath: '/quizzes/$id/versions'
+      preLoaderRoute: typeof AuthenticatedQuizzesIdVersionsRouteImport
+      parentRoute: typeof AuthenticatedQuizzesRoute
+    }
   }
 }
+
+interface AuthenticatedQuizzesRouteChildren {
+  AuthenticatedQuizzesIdVersionsRoute: typeof AuthenticatedQuizzesIdVersionsRoute
+}
+
+const AuthenticatedQuizzesRouteChildren: AuthenticatedQuizzesRouteChildren = {
+  AuthenticatedQuizzesIdVersionsRoute: AuthenticatedQuizzesIdVersionsRoute,
+}
+
+const AuthenticatedQuizzesRouteWithChildren =
+  AuthenticatedQuizzesRoute._addFileChildren(AuthenticatedQuizzesRouteChildren)
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedBuilderRoute: typeof AuthenticatedBuilderRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
-  AuthenticatedQuizzesRoute: typeof AuthenticatedQuizzesRoute
+  AuthenticatedQuizzesRoute: typeof AuthenticatedQuizzesRouteWithChildren
   AuthenticatedResultsRoute: typeof AuthenticatedResultsRoute
   AuthenticatedReviewRoute: typeof AuthenticatedReviewRoute
   AuthenticatedQuizIdRoute: typeof AuthenticatedQuizIdRoute
@@ -237,7 +268,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedBuilderRoute: AuthenticatedBuilderRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
-  AuthenticatedQuizzesRoute: AuthenticatedQuizzesRoute,
+  AuthenticatedQuizzesRoute: AuthenticatedQuizzesRouteWithChildren,
   AuthenticatedResultsRoute: AuthenticatedResultsRoute,
   AuthenticatedReviewRoute: AuthenticatedReviewRoute,
   AuthenticatedQuizIdRoute: AuthenticatedQuizIdRoute,
