@@ -329,9 +329,12 @@ function BuilderPage() {
         <Button variant="outline" onClick={() => setQuestions((qs) => [...qs, newCas()])}>
           <Plus className="h-4 w-4 mr-1" /> Ajouter un cas pratique
         </Button>
-        <div className="ml-auto">
-          <Button onClick={save} disabled={busy}>
-            <Save className="h-4 w-4 mr-1" /> {busy ? "Enregistrement…" : "Enregistrer le questionnaire"}
+        <div className="ml-auto flex gap-2">
+          <Button variant="outline" onClick={() => save(false)} disabled={busy}>
+            <Save className="h-4 w-4 mr-1" /> {busy ? "…" : "Enregistrer brouillon"}
+          </Button>
+          <Button onClick={() => save(true)} disabled={busy}>
+            <Save className="h-4 w-4 mr-1" /> {busy ? "…" : "Publier"}
           </Button>
         </div>
       </div>
