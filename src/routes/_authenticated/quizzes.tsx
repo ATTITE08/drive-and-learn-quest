@@ -6,8 +6,11 @@ import { LEVELS, SUBJECTS, levelLabel, subjectLabel } from "@/lib/constants";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useState } from "react";
-import { Play, Filter, Send, History } from "lucide-react";
+import { Play, Filter, Send, History, Pencil, Trash2, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/quizzes")({
@@ -21,6 +24,8 @@ function Quizzes() {
   const isStaff = role === "admin" || role === "formateur";
   const [subject, setSubject] = useState<string>("all");
   const [level, setLevel] = useState<string>(userLevel ?? "all");
+  const [editing, setEditing] = useState<any | null>(null);
+  const [form, setForm] = useState({ title: "", subject: "", level: "" });
   const qc = useQueryClient();
 
   const { data: quizzes, isLoading } = useQuery({
