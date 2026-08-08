@@ -233,6 +233,11 @@ function DocumentRow({
 
 function UsersAdmin() {
   const qc = useQueryClient();
+  const { data: me } = useUserRole();
+  const removeUser = useServerFn(deleteUser);
+  const [editing, setEditing] = useState<any | null>(null);
+  const [form, setForm] = useState<{ full_name: string; level: string }>({ full_name: "", level: "" });
+
   const { data: users, isLoading } = useQuery({
     queryKey: ["all-users"],
     queryFn: async () => {
@@ -253,6 +258,24 @@ function UsersAdmin() {
     if (error) toast.error(error.message);
     else { toast.success("Rôle mis à jour"); qc.invalidateQueries({ queryKey: ["all-users"] }); }
   };
+
+  const saveProfile = async () => {
+    if (!editing) return;
+    const { error } = await supabase
+      .from("profiles")
+      .update({ full_name: form.full_name || null, level: (form.level || null) as any })
+      .eq("id", editing.id);
+    if (error) return toast.error(error.message);
+    toast.success("Profil mis à jour");
+    setEditing(null);
+    qc.invalidateQueries({ queryKey: ["all-users"] });
+  };
+
+  const delMut = useMutation({
+    mutationFn: (userId: string) => removeUser({ data: { userId } }),
+    onSuccess: () => { toast.success("Utilisateur supprimé"); qc.invalidateQueries({ queryKey: ["all-users"] }); },
+    onError: (e: any) => toast.error(e.message ?? "Échec de la suppression"),
+  });
 
   return (
     <Card className="p-6">
@@ -275,10 +298,45 @@ function UsersAdmin() {
                   <SelectItem value="admin">Admin</SelectItem>
                 </SelectContent>
               </Select>
+              <Button size="sm" variant="outline" onClick={() => { setEditing(u); setForm({ full_name: u.full_name ?? "", level: u.level ?? "" }); }}>
+                <Pencil className="h-4 w-4" />
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                disabled={delMut.isPending || u.id === me?.userId}
+                onClick={() => { if (confirm(`Supprimer définitivement ${u.email} ?`)) delMut.mutate(u.id); }}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
             </div>
           ))}
         </div>
       )}
+
+      <Dialog open={!!editing} onOpenChange={(v) => !v && setEditing(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Modifier l'utilisateur</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Nom complet</Label>
+              <Input value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} />
+            </div>
+            <div>
+              <Label>Niveau</Label>
+              <Select value={form.level} onValueChange={(v) => setForm({ ...form, level: v })}>
+                <SelectTrigger><SelectValue placeholder="Choisir" /></SelectTrigger>
+                <SelectContent>{LEVELS.map((l) => <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setEditing(null)}>Annuler</Button>
+              <Button onClick={saveProfile}>Enregistrer</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
+
