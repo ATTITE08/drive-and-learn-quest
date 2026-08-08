@@ -211,6 +211,21 @@ function Quizzes() {
                           </Link>
                         </Button>
                       )}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => { setEditing(q); setForm({ title: q.title, subject: q.subject, level: q.level }); }}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        disabled={removeQuiz.isPending}
+                        onClick={() => { if (confirm(`Supprimer « ${q.title} » et ses questions ?`)) removeQuiz.mutate(q.id); }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </>
                   )}
                 </div>
@@ -219,6 +234,37 @@ function Quizzes() {
           })}
         </div>
       )}
+
+      <Dialog open={!!editing} onOpenChange={(v) => !v && setEditing(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Modifier le questionnaire</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Titre</Label>
+              <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
+            </div>
+            <div>
+              <Label>Matière</Label>
+              <Select value={form.subject} onValueChange={(v) => setForm({ ...form, subject: v })}>
+                <SelectTrigger><SelectValue placeholder="Choisir" /></SelectTrigger>
+                <SelectContent>{SUBJECTS.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Niveau</Label>
+              <Select value={form.level} onValueChange={(v) => setForm({ ...form, level: v })}>
+                <SelectTrigger><SelectValue placeholder="Choisir" /></SelectTrigger>
+                <SelectContent>{LEVELS.map((l) => <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setEditing(null)}>Annuler</Button>
+              <Button onClick={() => saveQuiz.mutate()} disabled={saveQuiz.isPending || !form.title}>Enregistrer</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
+
   );
 }
