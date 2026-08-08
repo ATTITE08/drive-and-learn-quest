@@ -10,7 +10,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { levelLabel, subjectLabel } from "@/lib/constants";
-import { CheckCircle2, XCircle, ArrowRight, Trophy, ClipboardCheck } from "lucide-react";
+import {
+  CheckCircle2,
+  XCircle,
+  ArrowRight,
+  ArrowLeft,
+  Trophy,
+  ClipboardCheck,
+  Lock,
+} from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import {
@@ -24,6 +32,26 @@ export const Route = createFileRoute("/_authenticated/quiz/$id")({
   component: QuizPage,
 });
 
+type Criterion = { label: string; points: number };
+
+type Correction = {
+  questionId: string;
+  isQcm: boolean;
+  prompt: string;
+  choices: string[];
+  // QCM
+  selectedIndex: number | null;
+  correctIndex: number | null;
+  explanation: string | null;
+  isCorrect: boolean;
+  qcmPoints: number;
+  // Cas pratique
+  textAnswer: string;
+  modelAnswer: string | null;
+  criteria: Criterion[];
+  points: number;
+};
+
 function QuizPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
@@ -34,20 +62,17 @@ function QuizPage() {
 
   const [attemptId, setAttemptId] = useState<string | null>(null);
   const [current, setCurrent] = useState(0);
-  const [selected, setSelected] = useState<number | null>(null);
-  const [textAnswer, setTextAnswer] = useState("");
-  const [revealed, setRevealed] = useState(false);
-  const [checked, setChecked] = useState<boolean[]>([]);
-  const [selfMark, setSelfMark] = useState<boolean | null>(null);
-  const [scored, setScored] = useState(false);
-  const [earnedPoints, setEarnedPoints] = useState(0);
-  const [totalPoints, setTotalPoints] = useState(0);
-  const [finished, setFinished] = useState(false);
+  const [responses, setResponses] = useState<
+    Record<string, { selected: number | null; text: string }>
+  >({});
+  const [phase, setPhase] = useState<"answering" | "review" | "finished">("answering");
+  const [submitting, setSubmitting] = useState(false);
+  const [corrections, setCorrections] = useState<Correction[]>([]);
+  const [checkedMap, setCheckedMap] = useState<Record<string, boolean[]>>({});
+  const [selfMarks, setSelfMarks] = useState<Record<string, boolean>>({});
+  const [finalEarned, setFinalEarned] = useState(0);
+  const [finalTotal, setFinalTotal] = useState(0);
   const [startedAt] = useState(() => Date.now());
-  // Server-revealed answer keys, populated only after the user submits.
-  const [revealedCorrectIndex, setRevealedCorrectIndex] = useState<number | null>(null);
-  const [revealedExplanation, setRevealedExplanation] = useState<string | null>(null);
-  const [revealedModelAnswer, setRevealedModelAnswer] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["quiz-attempt", id],
@@ -73,112 +98,149 @@ function QuizPage() {
   if (!data?.quiz) return <p>Questionnaire introuvable.</p>;
   if (!data.questions.length) return <p>Aucune question dans ce questionnaire.</p>;
 
-  const q = data.questions[current] as any;
+  const questions = data.questions as any[];
+  const total = questions.length;
+  const q = questions[current];
   const isQcm = (q.type ?? "qcm") === "qcm";
   const choices = (q.choices as string[]) ?? [];
-  const total = data.questions.length;
-  const criteria: { label: string; points: number }[] = Array.isArray(q.criteria)
-    ? (q.criteria as any[]).filter((c) => c && typeof c.label === "string").map((c) => ({ label: String(c.label), points: Number(c.points) || 1 }))
-    : [];
-  const questionPoints: number = Math.max(1, Number(q.points) || (criteria.length ? criteria.reduce((s, c) => s + c.points, 0) : 1));
+  const resp = responses[q.id] ?? { selected: null, text: "" };
+  const questionPoints: number = Math.max(1, Number(q.points) || 1);
 
-  const validate = async () => {
-    if (revealed || !attemptId) return;
-    if (isQcm) {
-      if (selected === null) return;
-      try {
-        const res = await scoreQcm({
-          data: { attemptId, questionId: q.id, selectedIndex: selected },
-        });
-        setRevealedCorrectIndex(res.correctIndex);
-        setRevealedExplanation(res.explanation);
-        setEarnedPoints((p) => p + (res.isCorrect ? res.points : 0));
-        setTotalPoints((p) => p + res.points);
-        setScored(true);
-        setRevealed(true);
-      } catch (e: any) {
-        toast.error(e.message ?? "Erreur de validation");
-      }
-    } else {
-      if (!textAnswer.trim()) return;
-      try {
-        const res = await revealCase({
-          data: { attemptId, questionId: q.id, textAnswer },
-        });
-        setRevealedModelAnswer(res.modelAnswer);
-        setChecked(new Array(criteria.length).fill(false));
-        setRevealed(true);
-      } catch (e: any) {
-        toast.error(e.message ?? "Erreur de validation");
-      }
-    }
+  const setResp = (patch: Partial<{ selected: number | null; text: string }>) =>
+    setResponses((r) => ({ ...r, [q.id]: { ...(r[q.id] ?? { selected: null, text: "" }), ...patch } }));
+
+  const answered = (question: any) => {
+    const r = responses[question.id];
+    if (!r) return false;
+    return (question.type ?? "qcm") === "qcm" ? r.selected !== null : !!r.text.trim();
   };
 
-  const finalizeCriteria = async () => {
-    if (!attemptId) return;
+  const allAnswered = questions.every(answered);
+
+  // ---- Final validation: submit everything, then reveal the corrections ----
+  const finalValidate = async () => {
+    if (!attemptId || submitting) return;
+    setSubmitting(true);
     try {
-      const res = await submitCase({
-        data: {
-          attemptId,
-          questionId: q.id,
-          textAnswer,
-          criteriaScores: criteria.map((c, i) => ({ label: c.label, points: c.points, checked: !!checked[i] })),
-        },
-      });
-      setEarnedPoints((p) => p + res.earned);
-      setTotalPoints((p) => p + res.totalPoints);
-      setScored(true);
+      const out: Correction[] = [];
+      for (const question of questions) {
+        const r = responses[question.id] ?? { selected: null, text: "" };
+        const qcm = (question.type ?? "qcm") === "qcm";
+        if (qcm) {
+          const res = await scoreQcm({
+            data: { attemptId, questionId: question.id, selectedIndex: r.selected as number },
+          });
+          out.push({
+            questionId: question.id,
+            isQcm: true,
+            prompt: question.prompt,
+            choices: (question.choices as string[]) ?? [],
+            selectedIndex: r.selected,
+            correctIndex: res.correctIndex,
+            explanation: res.explanation,
+            isCorrect: res.isCorrect,
+            qcmPoints: res.points,
+            textAnswer: "",
+            modelAnswer: null,
+            criteria: [],
+            points: res.points,
+          });
+        } else {
+          const res = await revealCase({
+            data: { attemptId, questionId: question.id, textAnswer: r.text },
+          });
+          const criteria: Criterion[] = (Array.isArray(res.criteria) ? res.criteria : [])
+            .filter((c: any) => c && typeof c.label === "string")
+            .map((c: any) => ({ label: String(c.label), points: Number(c.points) || 1 }));
+          out.push({
+            questionId: question.id,
+            isQcm: false,
+            prompt: question.prompt,
+            choices: [],
+            selectedIndex: null,
+            correctIndex: null,
+            explanation: question.explanation ?? null,
+            isCorrect: false,
+            qcmPoints: 0,
+            textAnswer: r.text,
+            modelAnswer: res.modelAnswer,
+            criteria,
+            points: res.points,
+          });
+        }
+      }
+      setCorrections(out);
+      setCheckedMap(
+        Object.fromEntries(
+          out.filter((c) => !c.isQcm).map((c) => [c.questionId, new Array(c.criteria.length).fill(false)]),
+        ),
+      );
+      setPhase("review");
+      window.scrollTo({ top: 0 });
     } catch (e: any) {
-      toast.error(e.message ?? "Erreur d'enregistrement");
+      toast.error(e.message ?? "Erreur lors de la validation");
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  const submitSelfMark = async (ok: boolean) => {
-    if (!attemptId) return;
-    setSelfMark(ok);
+  const cases = corrections.filter((c) => !c.isQcm);
+  const selfEvalDone = cases.every((c) =>
+    c.criteria.length > 0 ? true : selfMarks[c.questionId] !== undefined,
+  );
+
+  // ---- Persist self-evaluation and close the attempt ----
+  const finishAttempt = async () => {
+    if (!attemptId || submitting) return;
+    setSubmitting(true);
     try {
-      const res = await submitCase({
-        data: {
-          attemptId,
-          questionId: q.id,
-          textAnswer,
-          criteriaScores: [],
-          selfMark: ok,
-        },
-      });
-      setEarnedPoints((p) => p + res.earned);
-      setTotalPoints((p) => p + res.totalPoints);
-      setScored(true);
-    } catch (e: any) {
-      toast.error(e.message ?? "Erreur d'enregistrement");
-    }
-  };
+      let earned = corrections.filter((c) => c.isQcm && c.isCorrect).reduce((s, c) => s + c.qcmPoints, 0);
+      let totalPts = corrections.filter((c) => c.isQcm).reduce((s, c) => s + c.qcmPoints, 0);
 
-  const next = async () => {
-    if (current < total - 1) {
-      setCurrent((c) => c + 1);
-      setSelected(null);
-      setTextAnswer("");
-      setRevealed(false);
-      setSelfMark(null);
-      setChecked([]);
-      setScored(false);
-      setRevealedCorrectIndex(null);
-      setRevealedExplanation(null);
-      setRevealedModelAnswer(null);
-    } else {
+      for (const c of cases) {
+        const checks = checkedMap[c.questionId] ?? [];
+        const res = await submitCase({
+          data: {
+            attemptId,
+            questionId: c.questionId,
+            textAnswer: c.textAnswer,
+            criteriaScores: c.criteria.map((cr, i) => ({
+              label: cr.label,
+              points: cr.points,
+              checked: !!checks[i],
+            })),
+            ...(c.criteria.length === 0 ? { selfMark: !!selfMarks[c.questionId] } : {}),
+          },
+        });
+        earned += res.earned;
+        totalPts += res.totalPoints;
+      }
+
       const duration = Math.round((Date.now() - startedAt) / 1000);
-      if (attemptId) {
-        await supabase.from("attempts").update({
-          score: earnedPoints, total: totalPoints, duration_seconds: duration, finished_at: new Date().toISOString(),
-        }).eq("id", attemptId);
-      }
-      setFinished(true);
+      await supabase
+        .from("attempts")
+        .update({
+          score: earned,
+          total: totalPts,
+          duration_seconds: duration,
+          finished_at: new Date().toISOString(),
+        })
+        .eq("id", attemptId);
+
+      setFinalEarned(earned);
+      setFinalTotal(totalPts);
+      setPhase("finished");
+      window.scrollTo({ top: 0 });
+    } catch (e: any) {
+      toast.error(e.message ?? "Erreur d'enregistrement");
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  if (finished) {
-    const pct = totalPoints > 0 ? Math.round((earnedPoints / totalPoints) * 100) : 0;
+  // ------------------------------- Finished --------------------------------
+  if (phase === "finished") {
+    const pct = finalTotal > 0 ? Math.round((finalEarned / finalTotal) * 100) : 0;
     return (
       <div className="max-w-2xl mx-auto">
         <Card className="p-8 text-center">
@@ -187,29 +249,202 @@ function QuizPage() {
           <p className="mt-2 text-muted-foreground">{data.quiz.title}</p>
           <div className="mt-6 inline-flex items-baseline gap-2">
             <span className="font-display text-6xl font-bold">{pct}%</span>
-            <span className="text-muted-foreground">({earnedPoints}/{totalPoints} pts)</span>
+            <span className="text-muted-foreground">
+              ({finalEarned}/{finalTotal} pts)
+            </span>
           </div>
-          <p className={cn("mt-4 font-medium", pct >= 70 ? "text-success" : pct >= 50 ? "text-amber" : "text-destructive")}>
+          <p
+            className={cn(
+              "mt-4 font-medium",
+              pct >= 70 ? "text-success" : pct >= 50 ? "text-amber" : "text-destructive",
+            )}
+          >
             {pct >= 70 ? "Excellent travail !" : pct >= 50 ? "Vous pouvez encore progresser." : "Révision recommandée."}
           </p>
           <div className="mt-8 flex justify-center gap-3">
             <Button onClick={() => navigate({ to: "/quizzes" })}>Autres questionnaires</Button>
-            <Button variant="outline" onClick={() => navigate({ to: "/results" })}>Mes résultats</Button>
+            <Button variant="outline" onClick={() => navigate({ to: "/results" })}>
+              Mes résultats
+            </Button>
           </div>
         </Card>
       </div>
     );
   }
 
-  const canAdvance = isQcm ? revealed : revealed && scored;
+  // -------------------------------- Review ---------------------------------
+  if (phase === "review") {
+    return (
+      <div className="max-w-2xl mx-auto space-y-6">
+        <div>
+          <h1 className="font-display text-2xl font-bold">Corrigé — {data.quiz.title}</h1>
+          <p className="text-muted-foreground text-sm">
+            Vos réponses ont été enregistrées. Voici le corrigé complet.
+          </p>
+        </div>
 
+        {corrections.map((c, idx) => (
+          <Card key={c.questionId} className="p-6 space-y-4">
+            <div className="flex items-center gap-2">
+              <span className="rounded-md bg-secondary px-2 py-0.5 text-xs font-medium">Q{idx + 1}</span>
+              <span
+                className={cn(
+                  "rounded-md px-2 py-0.5 text-xs font-medium",
+                  c.isQcm ? "bg-secondary" : "bg-primary/10 text-primary",
+                )}
+              >
+                {c.isQcm ? "QCM" : "Cas pratique"}
+              </span>
+              {c.isQcm &&
+                (c.isCorrect ? (
+                  <CheckCircle2 className="h-4 w-4 text-success" />
+                ) : (
+                  <XCircle className="h-4 w-4 text-destructive" />
+                ))}
+            </div>
+            <p className="font-medium whitespace-pre-line">{c.prompt}</p>
+
+            {c.isQcm ? (
+              <div className="space-y-2">
+                {c.choices.map((choice, i) => {
+                  const isSelected = c.selectedIndex === i;
+                  const isCorrect = c.correctIndex === i;
+                  return (
+                    <div
+                      key={i}
+                      className={cn(
+                        "flex items-center gap-3 rounded-md border p-3 text-sm",
+                        isCorrect && "border-success bg-success/10",
+                        isSelected && !isCorrect && "border-destructive bg-destructive/10",
+                      )}
+                    >
+                      <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full border text-xs font-bold">
+                        {String.fromCharCode(65 + i)}
+                      </span>
+                      <span className="flex-1">{choice}</span>
+                      {isSelected && <span className="text-xs text-muted-foreground">Votre choix</span>}
+                      {isCorrect && <CheckCircle2 className="h-4 w-4 text-success" />}
+                    </div>
+                  );
+                })}
+                {c.explanation && (
+                  <div className="rounded-md border-l-4 border-amber bg-amber/5 p-3 text-sm">
+                    <strong>Explication :</strong> {c.explanation}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase text-muted-foreground mb-1">Votre réponse</p>
+                  <div className="rounded-md border bg-muted/40 p-3 text-sm whitespace-pre-line">
+                    {c.textAnswer}
+                  </div>
+                </div>
+                {c.modelAnswer && (
+                  <div className="rounded-md border-l-4 border-rail bg-rail/5 p-3 text-sm">
+                    <strong>Réponse-type :</strong>
+                    <p className="mt-1 whitespace-pre-line">{c.modelAnswer}</p>
+                  </div>
+                )}
+                {c.criteria.length > 0 ? (
+                  <div className="rounded-md border p-4 space-y-3">
+                    <div>
+                      <p className="text-sm font-medium">Barème — cochez les critères couverts par votre réponse</p>
+                      <p className="text-xs text-muted-foreground">
+                        Total : {c.points} pt{c.points > 1 ? "s" : ""}
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      {c.criteria.map((cr, i) => (
+                        <label
+                          key={i}
+                          className="flex items-start gap-3 rounded-md border p-2 cursor-pointer hover:bg-secondary/50"
+                        >
+                          <Checkbox
+                            checked={!!checkedMap[c.questionId]?.[i]}
+                            onCheckedChange={(v) =>
+                              setCheckedMap((m) => ({
+                                ...m,
+                                [c.questionId]: (m[c.questionId] ?? []).map((x, idx2) =>
+                                  idx2 === i ? !!v : x,
+                                ),
+                              }))
+                            }
+                            className="mt-0.5"
+                          />
+                          <span className="flex-1 text-sm">{cr.label}</span>
+                          <span className="text-xs font-semibold text-muted-foreground shrink-0">
+                            {cr.points} pt{cr.points > 1 ? "s" : ""}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                    <p className="text-sm">
+                      Points obtenus :{" "}
+                      <strong>
+                        {c.criteria.reduce(
+                          (s, cr, i) => s + (checkedMap[c.questionId]?.[i] ? cr.points : 0),
+                          0,
+                        )}
+                      </strong>{" "}
+                      / {c.points}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="rounded-md border p-3">
+                    <p className="text-sm font-medium">
+                      Auto-évaluation : votre réponse couvre-t-elle l'essentiel ?
+                    </p>
+                    <div className="mt-2 flex gap-2">
+                      <Button
+                        size="sm"
+                        variant={selfMarks[c.questionId] === true ? "default" : "outline"}
+                        onClick={() => setSelfMarks((m) => ({ ...m, [c.questionId]: true }))}
+                      >
+                        <CheckCircle2 className="h-4 w-4 mr-1" /> Oui, acquis
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={selfMarks[c.questionId] === false ? "default" : "outline"}
+                        onClick={() => setSelfMarks((m) => ({ ...m, [c.questionId]: false }))}
+                      >
+                        <XCircle className="h-4 w-4 mr-1" /> Non, à revoir
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </Card>
+        ))}
+
+        <div className="flex justify-end">
+          <Button onClick={finishAttempt} disabled={submitting || !selfEvalDone}>
+            {submitting ? "Enregistrement…" : "Voir mon score final"}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // ------------------------------- Answering -------------------------------
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
         <div className="flex gap-2 mb-2 flex-wrap">
-          <span className="rounded-md bg-rail/10 px-2 py-0.5 text-xs font-medium text-rail">{subjectLabel(data.quiz.subject)}</span>
-          <span className="rounded-md bg-amber/15 px-2 py-0.5 text-xs font-medium">{levelLabel(data.quiz.level)}</span>
-          <span className={cn("rounded-md px-2 py-0.5 text-xs font-medium", isQcm ? "bg-secondary" : "bg-primary/10 text-primary")}>
+          <span className="rounded-md bg-rail/10 px-2 py-0.5 text-xs font-medium text-rail">
+            {subjectLabel(data.quiz.subject)}
+          </span>
+          <span className="rounded-md bg-amber/15 px-2 py-0.5 text-xs font-medium">
+            {levelLabel(data.quiz.level)}
+          </span>
+          <span
+            className={cn(
+              "rounded-md px-2 py-0.5 text-xs font-medium",
+              isQcm ? "bg-secondary" : "bg-primary/10 text-primary",
+            )}
+          >
             {isQcm ? "QCM" : "Cas pratique"}
           </span>
           <span className="rounded-md bg-secondary px-2 py-0.5 text-xs font-medium">
@@ -218,9 +453,14 @@ function QuizPage() {
         </div>
         <h1 className="font-display text-2xl font-bold">{data.quiz.title}</h1>
         <div className="mt-3 flex items-center gap-3">
-          <Progress value={((current + (revealed ? 1 : 0)) / total) * 100} className="flex-1" />
-          <span className="text-sm text-muted-foreground tabular-nums">{current + 1}/{total}</span>
+          <Progress value={((current + 1) / total) * 100} className="flex-1" />
+          <span className="text-sm text-muted-foreground tabular-nums">
+            {current + 1}/{total}
+          </span>
         </div>
+        <p className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+          <Lock className="h-3.5 w-3.5" /> Le corrigé sera affiché après la validation finale du test.
+        </p>
       </div>
 
       <Card className="p-6">
@@ -229,113 +469,54 @@ function QuizPage() {
         {isQcm ? (
           <div className="mt-5 space-y-2">
             {choices.map((c, i) => {
-              const isSelected = selected === i;
-              const isCorrect = revealedCorrectIndex !== null && i === revealedCorrectIndex;
-              const showCorrect = revealed && isCorrect;
-              const showWrong = revealed && isSelected && !isCorrect;
+              const isSelected = resp.selected === i;
               return (
                 <button
                   key={i}
-                  onClick={() => !revealed && setSelected(i)}
-                  disabled={revealed}
+                  onClick={() => setResp({ selected: i })}
                   className={cn(
                     "w-full flex items-center gap-3 rounded-md border p-3 text-left transition-colors",
-                    !revealed && isSelected && "border-rail bg-rail/5",
-                    !revealed && !isSelected && "hover:bg-secondary/50",
-                    showCorrect && "border-success bg-success/10",
-                    showWrong && "border-destructive bg-destructive/10",
+                    isSelected ? "border-rail bg-rail/5" : "hover:bg-secondary/50",
                   )}
                 >
                   <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full border text-xs font-bold">
                     {String.fromCharCode(65 + i)}
                   </span>
                   <span className="flex-1">{c}</span>
-                  {showCorrect && <CheckCircle2 className="h-5 w-5 text-success" />}
-                  {showWrong && <XCircle className="h-5 w-5 text-destructive" />}
                 </button>
               );
             })}
           </div>
         ) : (
           <div className="mt-5 space-y-3">
-            <div>
-              <Label className="text-sm font-medium flex items-center gap-1">
-                <ClipboardCheck className="h-4 w-4" /> Votre réponse
-              </Label>
-              <Textarea
-                rows={8}
-                className="mt-1"
-                value={textAnswer}
-                onChange={(e) => setTextAnswer(e.target.value)}
-                disabled={revealed}
-                placeholder="Rédigez votre réponse : étapes, procédure, points de vigilance…"
-              />
-            </div>
-            {revealed && revealedModelAnswer && (
-              <div className="rounded-md border-l-4 border-rail bg-rail/5 p-3 text-sm">
-                <strong>Réponse-type :</strong>
-                <p className="mt-1 whitespace-pre-line">{revealedModelAnswer}</p>
-              </div>
-            )}
-            {revealed && !scored && criteria.length > 0 && (
-              <div className="rounded-md border p-4 space-y-3">
-                <div>
-                  <p className="text-sm font-medium">Barème — cochez les critères couverts par votre réponse</p>
-                  <p className="text-xs text-muted-foreground">Total : {questionPoints} pt{questionPoints > 1 ? "s" : ""}</p>
-                </div>
-                <div className="space-y-2">
-                  {criteria.map((c, i) => (
-                    <label key={i} className="flex items-start gap-3 rounded-md border p-2 cursor-pointer hover:bg-secondary/50">
-                      <Checkbox
-                        checked={!!checked[i]}
-                        onCheckedChange={(v) => setChecked((arr) => arr.map((x, idx) => (idx === i ? !!v : x)))}
-                        className="mt-0.5"
-                      />
-                      <span className="flex-1 text-sm">{c.label}</span>
-                      <span className="text-xs font-semibold text-muted-foreground shrink-0">
-                        {c.points} pt{c.points > 1 ? "s" : ""}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm">
-                    Points obtenus : <strong>{criteria.reduce((s, c, i) => s + (checked[i] ? c.points : 0), 0)}</strong> / {questionPoints}
-                  </span>
-                  <Button size="sm" onClick={finalizeCriteria}>Valider l'auto-évaluation</Button>
-                </div>
-              </div>
-            )}
-            {revealed && !scored && criteria.length === 0 && selfMark === null && (
-              <div className="rounded-md border p-3">
-                <p className="text-sm font-medium">Auto-évaluation : votre réponse couvre-t-elle l'essentiel ?</p>
-                <div className="mt-2 flex gap-2">
-                  <Button size="sm" variant="outline" onClick={() => submitSelfMark(true)}>
-                    <CheckCircle2 className="h-4 w-4 mr-1 text-success" /> Oui, acquis
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={() => submitSelfMark(false)}>
-                    <XCircle className="h-4 w-4 mr-1 text-destructive" /> Non, à revoir
-                  </Button>
-                </div>
-              </div>
-            )}
+            <Label className="text-sm font-medium flex items-center gap-1">
+              <ClipboardCheck className="h-4 w-4" /> Votre réponse
+            </Label>
+            <Textarea
+              rows={8}
+              className="mt-1"
+              value={resp.text}
+              onChange={(e) => setResp({ text: e.target.value })}
+              placeholder="Rédigez votre réponse : étapes, procédure, points de vigilance…"
+            />
           </div>
         )}
 
-        {revealed && isQcm && revealedExplanation && (
-          <div className="mt-4 rounded-md border-l-4 border-amber bg-amber/5 p-3 text-sm">
-            <strong>Explication :</strong> {revealedExplanation}
-          </div>
-        )}
-
-        <div className="mt-6 flex justify-end">
-          {!revealed ? (
-            <Button onClick={validate} disabled={isQcm ? selected === null : !textAnswer.trim()}>
-              {isQcm ? "Valider" : "Voir la réponse-type"}
+        <div className="mt-6 flex items-center justify-between gap-3">
+          <Button
+            variant="outline"
+            onClick={() => setCurrent((c) => Math.max(0, c - 1))}
+            disabled={current === 0}
+          >
+            <ArrowLeft className="h-4 w-4 mr-1" /> Précédente
+          </Button>
+          {current < total - 1 ? (
+            <Button onClick={() => setCurrent((c) => c + 1)} disabled={!answered(q)}>
+              Suivante <ArrowRight className="h-4 w-4 ml-1" />
             </Button>
           ) : (
-            <Button onClick={next} disabled={!canAdvance}>
-              {current < total - 1 ? <>Suivante <ArrowRight className="h-4 w-4 ml-1" /></> : "Terminer"}
+            <Button onClick={finalValidate} disabled={!allAnswered || submitting || !attemptId}>
+              {submitting ? "Validation…" : "Valider le test"}
             </Button>
           )}
         </div>
