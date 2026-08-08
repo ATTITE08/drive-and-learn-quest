@@ -92,11 +92,48 @@ function Quizzes() {
     onError: (e: any) => toast.error(e.message ?? "Échec"),
   });
 
+  const saveQuiz = useMutation({
+    mutationFn: async () => {
+      if (!editing) return;
+      const { error } = await supabase
+        .from("quizzes")
+        .update({ title: form.title, subject: form.subject as any, level: form.level as any })
+        .eq("id", editing.id);
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => {
+      toast.success("Questionnaire mis à jour");
+      setEditing(null);
+      qc.invalidateQueries({ queryKey: ["quizzes"] });
+    },
+    onError: (e: any) => toast.error(e.message ?? "Échec"),
+  });
+
+  const removeQuiz = useMutation({
+    mutationFn: async (quizId: string) => {
+      await supabase.from("questions").delete().eq("quiz_id", quizId);
+      const { error } = await supabase.from("quizzes").delete().eq("id", quizId);
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => {
+      toast.success("Questionnaire supprimé");
+      qc.invalidateQueries({ queryKey: ["quizzes"] });
+    },
+    onError: (e: any) => toast.error(e.message ?? "Échec de la suppression"),
+  });
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-display text-3xl font-bold">Questionnaires</h1>
-        <p className="text-muted-foreground">Choisissez un test selon la matière et le niveau.</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="font-display text-3xl font-bold">Questionnaires</h1>
+          <p className="text-muted-foreground">Choisissez un test selon la matière et le niveau.</p>
+        </div>
+        {isStaff && (
+          <Button asChild>
+            <Link to="/builder"><Plus className="h-4 w-4 mr-1" /> Nouveau questionnaire</Link>
+          </Button>
+        )}
       </div>
 
       <Card className="p-4 flex flex-wrap items-center gap-3">
