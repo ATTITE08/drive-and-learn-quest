@@ -4,16 +4,18 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
 import { generateQuizFromDocument } from "@/lib/quiz.functions";
+import { deleteUser } from "@/lib/admin.functions";
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LEVELS, SUBJECTS, levelLabel, subjectLabel } from "@/lib/constants";
 import { toast } from "sonner";
-import { Sparkles, Upload, FileText, Trash2, Users, SlidersHorizontal } from "lucide-react";
+import { Sparkles, Upload, FileText, Trash2, Users, SlidersHorizontal, Pencil } from "lucide-react";
 import { RubricEditor } from "@/components/RubricEditor";
 
 
