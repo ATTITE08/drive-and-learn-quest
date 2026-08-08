@@ -6,8 +6,11 @@ import { LEVELS, SUBJECTS, levelLabel, subjectLabel } from "@/lib/constants";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useState } from "react";
-import { Play, Filter, Send, History } from "lucide-react";
+import { Play, Filter, Send, History, Pencil, Trash2, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/quizzes")({
@@ -21,6 +24,8 @@ function Quizzes() {
   const isStaff = role === "admin" || role === "formateur";
   const [subject, setSubject] = useState<string>("all");
   const [level, setLevel] = useState<string>(userLevel ?? "all");
+  const [editing, setEditing] = useState<any | null>(null);
+  const [form, setForm] = useState({ title: "", subject: "", level: "" });
   const qc = useQueryClient();
 
   const { data: quizzes, isLoading } = useQuery({
@@ -87,11 +92,48 @@ function Quizzes() {
     onError: (e: any) => toast.error(e.message ?? "Échec"),
   });
 
+  const saveQuiz = useMutation({
+    mutationFn: async () => {
+      if (!editing) return;
+      const { error } = await supabase
+        .from("quizzes")
+        .update({ title: form.title, subject: form.subject as any, level: form.level as any })
+        .eq("id", editing.id);
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => {
+      toast.success("Questionnaire mis à jour");
+      setEditing(null);
+      qc.invalidateQueries({ queryKey: ["quizzes"] });
+    },
+    onError: (e: any) => toast.error(e.message ?? "Échec"),
+  });
+
+  const removeQuiz = useMutation({
+    mutationFn: async (quizId: string) => {
+      await supabase.from("questions").delete().eq("quiz_id", quizId);
+      const { error } = await supabase.from("quizzes").delete().eq("id", quizId);
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => {
+      toast.success("Questionnaire supprimé");
+      qc.invalidateQueries({ queryKey: ["quizzes"] });
+    },
+    onError: (e: any) => toast.error(e.message ?? "Échec de la suppression"),
+  });
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-display text-3xl font-bold">Questionnaires</h1>
-        <p className="text-muted-foreground">Choisissez un test selon la matière et le niveau.</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="font-display text-3xl font-bold">Questionnaires</h1>
+          <p className="text-muted-foreground">Choisissez un test selon la matière et le niveau.</p>
+        </div>
+        {isStaff && (
+          <Button asChild>
+            <Link to="/builder"><Plus className="h-4 w-4 mr-1" /> Nouveau questionnaire</Link>
+          </Button>
+        )}
       </div>
 
       <Card className="p-4 flex flex-wrap items-center gap-3">
@@ -169,6 +211,21 @@ function Quizzes() {
                           </Link>
                         </Button>
                       )}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => { setEditing(q); setForm({ title: q.title, subject: q.subject, level: q.level }); }}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        disabled={removeQuiz.isPending}
+                        onClick={() => { if (confirm(`Supprimer « ${q.title} » et ses questions ?`)) removeQuiz.mutate(q.id); }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </>
                   )}
                 </div>
@@ -177,6 +234,37 @@ function Quizzes() {
           })}
         </div>
       )}
+
+      <Dialog open={!!editing} onOpenChange={(v) => !v && setEditing(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Modifier le questionnaire</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Titre</Label>
+              <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
+            </div>
+            <div>
+              <Label>Matière</Label>
+              <Select value={form.subject} onValueChange={(v) => setForm({ ...form, subject: v })}>
+                <SelectTrigger><SelectValue placeholder="Choisir" /></SelectTrigger>
+                <SelectContent>{SUBJECTS.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Niveau</Label>
+              <Select value={form.level} onValueChange={(v) => setForm({ ...form, level: v })}>
+                <SelectTrigger><SelectValue placeholder="Choisir" /></SelectTrigger>
+                <SelectContent>{LEVELS.map((l) => <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setEditing(null)}>Annuler</Button>
+              <Button onClick={() => saveQuiz.mutate()} disabled={saveQuiz.isPending || !form.title}>Enregistrer</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
+
   );
 }
