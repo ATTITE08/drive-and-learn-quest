@@ -15,6 +15,29 @@ const LEVEL_LABELS: Record<string, string> = {
   chef_traction: "Chef de traction",
 };
 
+// Périmètre CUMULATIF d'évaluation par niveau : chaque niveau inclut les précédents.
+const LEVEL_SCOPE: Record<string, string> = {
+  aide_conducteur: `Périmètre d'évaluation (niveau Aide conducteur) :
+- Définitions et vocabulaire ferroviaire de base.
+- Signalisation ferroviaire (signaux fixes, mobiles, lumineux, leur signification et la conduite à tenir).
+- Connaissances fondamentales de sécurité (règles élémentaires, protection, sécurité du personnel et des circulations).`,
+  conducteur_manoeuvre: `Périmètre d'évaluation CUMULATIF (niveau Conducteur de manœuvre) :
+1) Tout le socle Aide conducteur : définitions, signalisation ferroviaire, connaissances fondamentales de sécurité.
+2) Règles de conduite en gare.
+3) Procédures et modes opératoires de manœuvre.
+Répartition indicative : environ 40 % socle des niveaux précédents, 60 % spécificités du niveau.`,
+  conducteur_ligne: `Périmètre d'évaluation CUMULATIF (niveau Conducteur de ligne) :
+1) Tout le socle Aide conducteur : définitions, signalisation ferroviaire, sécurité fondamentale.
+2) Tout le niveau Conducteur de manœuvre : conduite en gare, procédures et modes opératoires de manœuvre.
+3) Documents de conduite, procédures techniques et modes opératoires applicables en ligne.
+Répartition indicative : environ 40 % socle des niveaux précédents (dont signalisation et sécurité), 60 % spécificités ligne.`,
+  chef_traction: `Périmètre d'évaluation CUMULATIF (niveau Chef de traction) :
+Maîtrise approfondie de l'ensemble : conduite (gare et ligne), manœuvres, procédures techniques, documents de conduite et réglementation, ainsi que la signalisation et la sécurité fondamentale.
+Les questions doivent exiger analyse, arbitrage et application de la réglementation, pas seulement de la restitution.
+Répartition indicative : environ 40 % socle des niveaux précédents, 60 % expertise et réglementation approfondie.`,
+};
+
+
 const InputSchema = z.object({
   documentId: z.string().uuid(),
   numQcm: z.number().int().min(0).max(20).default(6),
@@ -72,12 +95,16 @@ export const generateQuizFromDocument = createServerFn({ method: "POST" })
 Matière : ${SUBJECT_LABELS[doc.subject] ?? doc.subject}
 Niveau : ${LEVEL_LABELS[doc.level] ?? doc.level}
 
+${LEVEL_SCOPE[doc.level] ?? ""}
+
 Composition demandée :
 - ${data.numQcm} question(s) à choix multiples (QCM), chacune avec exactement 4 choix et une seule bonne réponse.
 - ${data.numCasPratique} cas pratique(s) : mise en situation opérationnelle réaliste (incident, panne, manœuvre, procédure) demandant une réponse rédigée. Fournir une réponse-type détaillée (model_answer) que le formateur utilisera pour évaluer.
 
 Règles :
-- Fidélité stricte au contenu du document (procédures, chiffres, terminologie).
+- Le document PDF est la source principale, mais il NE LIMITE PAS le périmètre : complète obligatoirement avec les connaissances fondamentales des niveaux inférieurs (définitions, signalisation, sécurité, manœuvre selon le niveau) même si elles ne figurent pas dans le PDF. Un conducteur de ligne, par exemple, doit aussi être interrogé sur la signalisation et la sécurité de base.
+- Quand une question s'appuie sur le document, reste strictement fidèle à son contenu (procédures, chiffres, terminologie). Quand elle relève du socle réglementaire général, appuie-toi sur la réglementation ferroviaire usuelle et reste incontestable.
+- Couvre l'ensemble du périmètre du niveau : ne concentre pas toutes les questions sur un seul thème.
 - Vocabulaire technique ferroviaire approprié.
 - Chaque QCM inclut une explication brève (1-2 phrases) et vaut 1 point.
 - Chaque cas pratique inclut : une réponse-type structurée (model_answer), un barème total (points, entre 3 et 10) et 3 à 6 critères d'évaluation (label + points), chaque critère décrivant un élément précis attendu dans la réponse. La somme des points des critères doit égaler le total (points).
