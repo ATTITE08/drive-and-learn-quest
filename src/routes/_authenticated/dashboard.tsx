@@ -253,16 +253,30 @@ function Dashboard() {
   );
 }
 
-function StatCard({ icon: Icon, label, value }: { icon: any; label: string; value: any }) {
+function StatCard({ icon: Icon, label, value, hint }: { icon: any; label: string; value: any; hint?: string }) {
   return (
     <Card className="p-5 flex items-center gap-4">
-      <div className="grid h-12 w-12 place-items-center rounded-lg bg-rail/10 text-rail">
+      <div className="grid h-12 w-12 shrink-0 place-items-center rounded-lg bg-rail/10 text-rail">
         <Icon className="h-6 w-6" />
       </div>
       <div>
         <p className="text-sm text-muted-foreground">{label}</p>
         <p className="font-display text-2xl font-bold">{value}</p>
+        {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
       </div>
     </Card>
   );
 }
+
+function Goal({ label, value, detail }: { label: string; value: number; detail: string }) {
+  return (
+    <div>
+      <div className="flex justify-between text-sm">
+        <span className="font-medium">{label}</span>
+        <span className="text-muted-foreground">{detail}</span>
+      </div>
+      <Progress value={value} className="mt-2 h-2" />
+    </div>
+  );
+}
+
