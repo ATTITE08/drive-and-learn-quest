@@ -95,12 +95,16 @@ export const generateQuizFromDocument = createServerFn({ method: "POST" })
 Matière : ${SUBJECT_LABELS[doc.subject] ?? doc.subject}
 Niveau : ${LEVEL_LABELS[doc.level] ?? doc.level}
 
+${LEVEL_SCOPE[doc.level] ?? ""}
+
 Composition demandée :
 - ${data.numQcm} question(s) à choix multiples (QCM), chacune avec exactement 4 choix et une seule bonne réponse.
 - ${data.numCasPratique} cas pratique(s) : mise en situation opérationnelle réaliste (incident, panne, manœuvre, procédure) demandant une réponse rédigée. Fournir une réponse-type détaillée (model_answer) que le formateur utilisera pour évaluer.
 
 Règles :
-- Fidélité stricte au contenu du document (procédures, chiffres, terminologie).
+- Le document PDF est la source principale, mais il NE LIMITE PAS le périmètre : complète obligatoirement avec les connaissances fondamentales des niveaux inférieurs (définitions, signalisation, sécurité, manœuvre selon le niveau) même si elles ne figurent pas dans le PDF. Un conducteur de ligne, par exemple, doit aussi être interrogé sur la signalisation et la sécurité de base.
+- Quand une question s'appuie sur le document, reste strictement fidèle à son contenu (procédures, chiffres, terminologie). Quand elle relève du socle réglementaire général, appuie-toi sur la réglementation ferroviaire usuelle et reste incontestable.
+- Couvre l'ensemble du périmètre du niveau : ne concentre pas toutes les questions sur un seul thème.
 - Vocabulaire technique ferroviaire approprié.
 - Chaque QCM inclut une explication brève (1-2 phrases) et vaut 1 point.
 - Chaque cas pratique inclut : une réponse-type structurée (model_answer), un barème total (points, entre 3 et 10) et 3 à 6 critères d'évaluation (label + points), chaque critère décrivant un élément précis attendu dans la réponse. La somme des points des critères doit égaler le total (points).
