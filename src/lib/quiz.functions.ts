@@ -15,6 +15,29 @@ const LEVEL_LABELS: Record<string, string> = {
   chef_traction: "Chef de traction",
 };
 
+// Périmètre CUMULATIF d'évaluation par niveau : chaque niveau inclut les précédents.
+const LEVEL_SCOPE: Record<string, string> = {
+  aide_conducteur: `Périmètre d'évaluation (niveau Aide conducteur) :
+- Définitions et vocabulaire ferroviaire de base.
+- Signalisation ferroviaire (signaux fixes, mobiles, lumineux, leur signification et la conduite à tenir).
+- Connaissances fondamentales de sécurité (règles élémentaires, protection, sécurité du personnel et des circulations).`,
+  conducteur_manoeuvre: `Périmètre d'évaluation CUMULATIF (niveau Conducteur de manœuvre) :
+1) Tout le socle Aide conducteur : définitions, signalisation ferroviaire, connaissances fondamentales de sécurité.
+2) Règles de conduite en gare.
+3) Procédures et modes opératoires de manœuvre.
+Répartition indicative : environ 40 % socle des niveaux précédents, 60 % spécificités du niveau.`,
+  conducteur_ligne: `Périmètre d'évaluation CUMULATIF (niveau Conducteur de ligne) :
+1) Tout le socle Aide conducteur : définitions, signalisation ferroviaire, sécurité fondamentale.
+2) Tout le niveau Conducteur de manœuvre : conduite en gare, procédures et modes opératoires de manœuvre.
+3) Documents de conduite, procédures techniques et modes opératoires applicables en ligne.
+Répartition indicative : environ 40 % socle des niveaux précédents (dont signalisation et sécurité), 60 % spécificités ligne.`,
+  chef_traction: `Périmètre d'évaluation CUMULATIF (niveau Chef de traction) :
+Maîtrise approfondie de l'ensemble : conduite (gare et ligne), manœuvres, procédures techniques, documents de conduite et réglementation, ainsi que la signalisation et la sécurité fondamentale.
+Les questions doivent exiger analyse, arbitrage et application de la réglementation, pas seulement de la restitution.
+Répartition indicative : environ 40 % socle des niveaux précédents, 60 % expertise et réglementation approfondie.`,
+};
+
+
 const InputSchema = z.object({
   documentId: z.string().uuid(),
   numQcm: z.number().int().min(0).max(20).default(6),
