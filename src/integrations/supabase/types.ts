@@ -103,6 +103,30 @@ export type Database = {
           },
         ]
       }
+      depots: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       documents: {
         Row: {
           content_text: string | null
@@ -139,29 +163,53 @@ export type Database = {
       profiles: {
         Row: {
           created_at: string
+          depot_id: string | null
           email: string | null
           full_name: string | null
           id: string
           level: Database["public"]["Enums"]["agent_level"] | null
+          manager_id: string | null
+          matricule: string | null
           updated_at: string
         }
         Insert: {
           created_at?: string
+          depot_id?: string | null
           email?: string | null
           full_name?: string | null
           id: string
           level?: Database["public"]["Enums"]["agent_level"] | null
+          manager_id?: string | null
+          matricule?: string | null
           updated_at?: string
         }
         Update: {
           created_at?: string
+          depot_id?: string | null
           email?: string | null
           full_name?: string | null
           id?: string
           level?: Database["public"]["Enums"]["agent_level"] | null
+          manager_id?: string | null
+          matricule?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_depot_id_fkey"
+            columns: ["depot_id"]
+            isOneToOne: false
+            referencedRelation: "depots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_manager_id_fkey"
+            columns: ["manager_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       questions: {
         Row: {
@@ -341,6 +389,12 @@ export type Database = {
         | "conducteur_manoeuvre"
         | "conducteur_ligne"
         | "chef_traction"
+        | "chef_cours"
+        | "surveillant"
+        | "chef_commande_conducteur"
+        | "chef_depot"
+        | "chef_departement"
+        | "assistant_chef_departement"
       app_role: "admin" | "formateur" | "agent"
       quiz_status: "draft" | "published"
       subject: "igs" | "prac" | "frein" | "technologies"
@@ -476,6 +530,12 @@ export const Constants = {
         "conducteur_manoeuvre",
         "conducteur_ligne",
         "chef_traction",
+        "chef_cours",
+        "surveillant",
+        "chef_commande_conducteur",
+        "chef_depot",
+        "chef_departement",
+        "assistant_chef_departement",
       ],
       app_role: ["admin", "formateur", "agent"],
       quiz_status: ["draft", "published"],

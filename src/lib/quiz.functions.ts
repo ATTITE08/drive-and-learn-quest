@@ -31,11 +31,34 @@ Répartition indicative : environ 40 % socle des niveaux précédents, 60 % spé
 2) Tout le niveau Conducteur de manœuvre : conduite en gare, procédures et modes opératoires de manœuvre.
 3) Documents de conduite, procédures techniques et modes opératoires applicables en ligne.
 Répartition indicative : environ 40 % socle des niveaux précédents (dont signalisation et sécurité), 60 % spécificités ligne.`,
+  chef_cours: `Périmètre d'évaluation CUMULATIF (niveau Chef de cours) :
+1) Tout le socle Aide conducteur : définitions, signalisation ferroviaire, sécurité fondamentale.
+2) Responsabilités du chef de cours : composition et suivi du convoi, opérations associées, communication avec le conducteur et la gare.
+Répartition indicative : environ 40 % socle des niveaux précédents, 60 % spécificités du niveau.`,
+  surveillant: `Périmètre d'évaluation CUMULATIF (niveau Surveillant) :
+1) Tout le socle Aide conducteur et Chef de cours.
+2) Surveillance des circulations et des opérations en gare, détection des anomalies, mesures de protection.
+Répartition indicative : environ 40 % socle des niveaux précédents, 60 % spécificités du niveau.`,
+  chef_commande_conducteur: `Périmètre d'évaluation CUMULATIF (niveau Chef commande conducteur) :
+1) Tout le socle conduite (aide conducteur, chef de cours, surveillant, manœuvre, ligne).
+2) Coordination et planification du service des agents : roulements, aptitudes, temps de conduite et de repos, gestion des aléas de service.
+Répartition indicative : environ 40 % socle des niveaux précédents, 60 % organisation et planification du service.`,
   chef_traction: `Périmètre d'évaluation CUMULATIF (niveau Chef de traction) :
 Maîtrise approfondie de l'ensemble : conduite (gare et ligne), manœuvres, procédures techniques, documents de conduite et réglementation, ainsi que la signalisation et la sécurité fondamentale.
+S'y ajoute l'animation d'un groupe d'agents : suivi et maintien de la performance de production, accompagnement et contrôle des agents.
 Les questions doivent exiger analyse, arbitrage et application de la réglementation, pas seulement de la restitution.
 Répartition indicative : environ 40 % socle des niveaux précédents, 60 % expertise et réglementation approfondie.`,
+  chef_depot: `Périmètre d'évaluation CUMULATIF (niveau Chef de dépôt traction) :
+Maîtrise de tout le socle conduite et encadrement, plus le pilotage d'un dépôt traction (Douala, Yaoundé, Belabo, Ngaoundéré) : disponibilité des engins, sécurité du dépôt, gestion des ressources et des indicateurs de production.
+Répartition indicative : environ 40 % socle des niveaux précédents, 60 % pilotage du dépôt.`,
+  assistant_chef_departement: `Périmètre d'évaluation CUMULATIF (niveau Assistant chef département conduite) :
+Tout le socle conduite et encadrement, plus le suivi transverse du département : reporting, conformité réglementaire, appui aux dépôts et aux chefs de traction.
+Répartition indicative : environ 40 % socle des niveaux précédents, 60 % pilotage transverse.`,
+  chef_departement: `Périmètre d'évaluation CUMULATIF (niveau Chef département conduite) :
+Maîtrise experte de l'ensemble du domaine conduite du réseau : réglementation, sécurité, organisation des dépôts, performance de production et arbitrages de direction.
+Répartition indicative : environ 40 % socle des niveaux précédents, 60 % réglementation approfondie et pilotage réseau.`,
 };
+
 
 
 const InputSchema = z.object({
