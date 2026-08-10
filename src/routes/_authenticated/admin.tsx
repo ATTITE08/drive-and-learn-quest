@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LEVELS, SUBJECTS, levelLabel, subjectLabel } from "@/lib/constants";
+import { LEVELS, SUBJECTS, levelLabel, subjectLabel, levelOrder, levelGrade } from "@/lib/constants";
 import { toast } from "sonner";
 import { Sparkles, Upload, FileText, Trash2, Users, SlidersHorizontal, Pencil } from "lucide-react";
 import { RubricEditor } from "@/components/RubricEditor";
