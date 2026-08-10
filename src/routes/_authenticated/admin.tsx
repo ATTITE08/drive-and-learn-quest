@@ -238,13 +238,20 @@ function UsersAdmin() {
   const { data: me } = useUserRole();
   const removeUser = useServerFn(deleteUser);
   const [editing, setEditing] = useState<any | null>(null);
-  const [form, setForm] = useState<{ full_name: string; level: string }>({ full_name: "", level: "" });
+  const [form, setForm] = useState<{ full_name: string; level: string; matricule: string; depot_id: string; manager_id: string }>({
+    full_name: "", level: "", matricule: "", depot_id: "", manager_id: "",
+  });
+
+  const { data: depots } = useQuery({
+    queryKey: ["depots"],
+    queryFn: async () => (await supabase.from("depots").select("id,name,code").order("name")).data ?? [],
+  });
 
   const { data: users, isLoading } = useQuery({
     queryKey: ["all-users"],
     queryFn: async () => {
       const [{ data: profiles }, { data: roles }] = await Promise.all([
-        supabase.from("profiles").select("id,full_name,email,level"),
+        supabase.from("profiles").select("id,full_name,email,level,matricule,depot_id,manager_id"),
         supabase.from("user_roles").select("user_id,role"),
       ]);
       return (profiles ?? []).map((p: any) => ({
@@ -253,6 +260,13 @@ function UsersAdmin() {
       }));
     },
   });
+
+  const nameOf = (id: string | null) => users?.find((u: any) => u.id === id)?.full_name ?? users?.find((u: any) => u.id === id)?.email ?? null;
+  const depotOf = (id: string | null) => depots?.find((d: any) => d.id === id)?.name ?? null;
+
+  const managerOptions = (users ?? []).filter(
+    (u: any) => u.id !== editing?.id && levelOrder(u.level) > levelOrder(form.level || editing?.level),
+  );
 
   const setRole = async (userId: string, role: string) => {
     await supabase.from("user_roles").delete().eq("user_id", userId);
@@ -265,7 +279,13 @@ function UsersAdmin() {
     if (!editing) return;
     const { error } = await supabase
       .from("profiles")
-      .update({ full_name: form.full_name || null, level: (form.level || null) as any })
+      .update({
+        full_name: form.full_name || null,
+        level: (form.level || null) as any,
+        matricule: form.matricule || null,
+        depot_id: form.depot_id || null,
+        manager_id: form.manager_id || null,
+      })
       .eq("id", editing.id);
     if (error) return toast.error(error.message);
     toast.success("Profil mis à jour");
@@ -281,7 +301,8 @@ function UsersAdmin() {
 
   return (
     <Card className="p-6">
-      <h3 className="font-display text-lg font-semibold">Utilisateurs et rôles</h3>
+      <h3 className="font-display text-lg font-semibold">Utilisateurs, grades et hiérarchie</h3>
+      <p className="text-sm text-muted-foreground">Affectez à chaque agent son grade, son dépôt de rattachement et son responsable hiérarchique.</p>
       {isLoading ? <p className="text-muted-foreground mt-3">Chargement…</p> : !users?.length ? (
         <p className="text-muted-foreground mt-3">Aucun utilisateur.</p>
       ) : (
@@ -289,8 +310,16 @@ function UsersAdmin() {
           {users.map((u: any) => (
             <div key={u.id} className="flex flex-wrap items-center gap-3 rounded-lg border p-3">
               <div className="flex-1 min-w-[200px]">
-                <p className="font-medium">{u.full_name ?? u.email}</p>
-                <p className="text-xs text-muted-foreground">{u.email} {u.level && `· ${levelLabel(u.level)}`}</p>
+                <p className="font-medium">
+                  {u.full_name ?? u.email}
+                  {u.matricule && <span className="ml-2 text-xs text-muted-foreground">#{u.matricule}</span>}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {u.email}
+                  {u.level && ` · ${levelLabel(u.level)}${levelGrade(u.level) ? ` (cat. ${levelGrade(u.level)})` : ""}`}
+                  {depotOf(u.depot_id) && ` · Dépôt ${depotOf(u.depot_id)}`}
+                  {nameOf(u.manager_id) && ` · N+1 : ${nameOf(u.manager_id)}`}
+                </p>
               </div>
               <Select value={u.roles[0] ?? "agent"} onValueChange={(v) => setRole(u.id, v)}>
                 <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
@@ -300,7 +329,20 @@ function UsersAdmin() {
                   <SelectItem value="admin">Admin</SelectItem>
                 </SelectContent>
               </Select>
-              <Button size="sm" variant="outline" onClick={() => { setEditing(u); setForm({ full_name: u.full_name ?? "", level: u.level ?? "" }); }}>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  setEditing(u);
+                  setForm({
+                    full_name: u.full_name ?? "",
+                    level: u.level ?? "",
+                    matricule: u.matricule ?? "",
+                    depot_id: u.depot_id ?? "",
+                    manager_id: u.manager_id ?? "",
+                  });
+                }}
+              >
                 <Pencil className="h-4 w-4" />
               </Button>
               <Button
@@ -325,10 +367,44 @@ function UsersAdmin() {
               <Input value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} />
             </div>
             <div>
-              <Label>Niveau</Label>
+              <Label>Matricule</Label>
+              <Input value={form.matricule} onChange={(e) => setForm({ ...form, matricule: e.target.value })} placeholder="Ex. 12345" />
+            </div>
+            <div>
+              <Label>Fonction / grade</Label>
               <Select value={form.level} onValueChange={(v) => setForm({ ...form, level: v })}>
                 <SelectTrigger><SelectValue placeholder="Choisir" /></SelectTrigger>
-                <SelectContent>{LEVELS.map((l) => <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>)}</SelectContent>
+                <SelectContent>
+                  {LEVELS.map((l) => (
+                    <SelectItem key={l.value} value={l.value}>
+                      {l.label}{l.grade ? ` — catégorie ${l.grade}` : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Dépôt traction</Label>
+              <Select value={form.depot_id || "none"} onValueChange={(v) => setForm({ ...form, depot_id: v === "none" ? "" : v })}>
+                <SelectTrigger><SelectValue placeholder="Choisir" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Aucun</SelectItem>
+                  {(depots ?? []).map((d: any) => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Responsable hiérarchique (N+1)</Label>
+              <Select value={form.manager_id || "none"} onValueChange={(v) => setForm({ ...form, manager_id: v === "none" ? "" : v })}>
+                <SelectTrigger><SelectValue placeholder="Choisir" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Aucun</SelectItem>
+                  {managerOptions.map((u: any) => (
+                    <SelectItem key={u.id} value={u.id}>
+                      {(u.full_name ?? u.email)}{u.level ? ` — ${levelLabel(u.level)}` : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
               </Select>
             </div>
             <div className="flex justify-end gap-2">
@@ -341,4 +417,5 @@ function UsersAdmin() {
     </Card>
   );
 }
+
 
