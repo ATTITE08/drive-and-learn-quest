@@ -21,6 +21,7 @@ export function AppShell({ children, role }: { children: ReactNode; role: AppRol
     { to: "/dashboard", label: "Tableau de bord" },
     { to: "/quizzes", label: "Questionnaires" },
     { to: "/results", label: role === "agent" ? "Mes résultats" : "Résultats" },
+    { to: "/equipe", label: "Mon équipe" },
   ];
     if (role === "admin" || role === "formateur") {
       nav.push({ to: "/review", label: "Réponses" });
