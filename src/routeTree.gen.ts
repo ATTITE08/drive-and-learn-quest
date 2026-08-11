@@ -15,8 +15,10 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedReviewRouteImport } from './routes/_authenticated/review'
 import { Route as AuthenticatedResultsRouteImport } from './routes/_authenticated/results'
 import { Route as AuthenticatedQuizzesRouteImport } from './routes/_authenticated/quizzes'
+import { Route as AuthenticatedPriseServiceRouteImport } from './routes/_authenticated/prise-service'
 import { Route as AuthenticatedMouvementsRouteImport } from './routes/_authenticated/mouvements'
 import { Route as AuthenticatedIncidentsRouteImport } from './routes/_authenticated/incidents'
+import { Route as AuthenticatedFeuilleServiceRouteImport } from './routes/_authenticated/feuille-service'
 import { Route as AuthenticatedEquipeRouteImport } from './routes/_authenticated/equipe'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedBuilderRouteImport } from './routes/_authenticated/builder'
@@ -53,6 +55,12 @@ const AuthenticatedQuizzesRoute = AuthenticatedQuizzesRouteImport.update({
   path: '/quizzes',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPriseServiceRoute =
+  AuthenticatedPriseServiceRouteImport.update({
+    id: '/prise-service',
+    path: '/prise-service',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMouvementsRoute = AuthenticatedMouvementsRouteImport.update({
   id: '/mouvements',
   path: '/mouvements',
@@ -63,6 +71,12 @@ const AuthenticatedIncidentsRoute = AuthenticatedIncidentsRouteImport.update({
   path: '/incidents',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedFeuilleServiceRoute =
+  AuthenticatedFeuilleServiceRouteImport.update({
+    id: '/feuille-service',
+    path: '/feuille-service',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedEquipeRoute = AuthenticatedEquipeRouteImport.update({
   id: '/equipe',
   path: '/equipe',
@@ -102,8 +116,10 @@ export interface FileRoutesByFullPath {
   '/builder': typeof AuthenticatedBuilderRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/equipe': typeof AuthenticatedEquipeRoute
+  '/feuille-service': typeof AuthenticatedFeuilleServiceRoute
   '/incidents': typeof AuthenticatedIncidentsRoute
   '/mouvements': typeof AuthenticatedMouvementsRoute
+  '/prise-service': typeof AuthenticatedPriseServiceRoute
   '/quizzes': typeof AuthenticatedQuizzesRouteWithChildren
   '/results': typeof AuthenticatedResultsRoute
   '/review': typeof AuthenticatedReviewRoute
@@ -117,8 +133,10 @@ export interface FileRoutesByTo {
   '/builder': typeof AuthenticatedBuilderRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/equipe': typeof AuthenticatedEquipeRoute
+  '/feuille-service': typeof AuthenticatedFeuilleServiceRoute
   '/incidents': typeof AuthenticatedIncidentsRoute
   '/mouvements': typeof AuthenticatedMouvementsRoute
+  '/prise-service': typeof AuthenticatedPriseServiceRoute
   '/quizzes': typeof AuthenticatedQuizzesRouteWithChildren
   '/results': typeof AuthenticatedResultsRoute
   '/review': typeof AuthenticatedReviewRoute
@@ -134,8 +152,10 @@ export interface FileRoutesById {
   '/_authenticated/builder': typeof AuthenticatedBuilderRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/equipe': typeof AuthenticatedEquipeRoute
+  '/_authenticated/feuille-service': typeof AuthenticatedFeuilleServiceRoute
   '/_authenticated/incidents': typeof AuthenticatedIncidentsRoute
   '/_authenticated/mouvements': typeof AuthenticatedMouvementsRoute
+  '/_authenticated/prise-service': typeof AuthenticatedPriseServiceRoute
   '/_authenticated/quizzes': typeof AuthenticatedQuizzesRouteWithChildren
   '/_authenticated/results': typeof AuthenticatedResultsRoute
   '/_authenticated/review': typeof AuthenticatedReviewRoute
@@ -151,8 +171,10 @@ export interface FileRouteTypes {
     | '/builder'
     | '/dashboard'
     | '/equipe'
+    | '/feuille-service'
     | '/incidents'
     | '/mouvements'
+    | '/prise-service'
     | '/quizzes'
     | '/results'
     | '/review'
@@ -166,8 +188,10 @@ export interface FileRouteTypes {
     | '/builder'
     | '/dashboard'
     | '/equipe'
+    | '/feuille-service'
     | '/incidents'
     | '/mouvements'
+    | '/prise-service'
     | '/quizzes'
     | '/results'
     | '/review'
@@ -182,8 +206,10 @@ export interface FileRouteTypes {
     | '/_authenticated/builder'
     | '/_authenticated/dashboard'
     | '/_authenticated/equipe'
+    | '/_authenticated/feuille-service'
     | '/_authenticated/incidents'
     | '/_authenticated/mouvements'
+    | '/_authenticated/prise-service'
     | '/_authenticated/quizzes'
     | '/_authenticated/results'
     | '/_authenticated/review'
@@ -241,6 +267,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedQuizzesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/prise-service': {
+      id: '/_authenticated/prise-service'
+      path: '/prise-service'
+      fullPath: '/prise-service'
+      preLoaderRoute: typeof AuthenticatedPriseServiceRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/mouvements': {
       id: '/_authenticated/mouvements'
       path: '/mouvements'
@@ -253,6 +286,13 @@ declare module '@tanstack/react-router' {
       path: '/incidents'
       fullPath: '/incidents'
       preLoaderRoute: typeof AuthenticatedIncidentsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/feuille-service': {
+      id: '/_authenticated/feuille-service'
+      path: '/feuille-service'
+      fullPath: '/feuille-service'
+      preLoaderRoute: typeof AuthenticatedFeuilleServiceRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/equipe': {
@@ -316,8 +356,10 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedBuilderRoute: typeof AuthenticatedBuilderRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedEquipeRoute: typeof AuthenticatedEquipeRoute
+  AuthenticatedFeuilleServiceRoute: typeof AuthenticatedFeuilleServiceRoute
   AuthenticatedIncidentsRoute: typeof AuthenticatedIncidentsRoute
   AuthenticatedMouvementsRoute: typeof AuthenticatedMouvementsRoute
+  AuthenticatedPriseServiceRoute: typeof AuthenticatedPriseServiceRoute
   AuthenticatedQuizzesRoute: typeof AuthenticatedQuizzesRouteWithChildren
   AuthenticatedResultsRoute: typeof AuthenticatedResultsRoute
   AuthenticatedReviewRoute: typeof AuthenticatedReviewRoute
@@ -329,8 +371,10 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedBuilderRoute: AuthenticatedBuilderRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedEquipeRoute: AuthenticatedEquipeRoute,
+  AuthenticatedFeuilleServiceRoute: AuthenticatedFeuilleServiceRoute,
   AuthenticatedIncidentsRoute: AuthenticatedIncidentsRoute,
   AuthenticatedMouvementsRoute: AuthenticatedMouvementsRoute,
+  AuthenticatedPriseServiceRoute: AuthenticatedPriseServiceRoute,
   AuthenticatedQuizzesRoute: AuthenticatedQuizzesRouteWithChildren,
   AuthenticatedResultsRoute: AuthenticatedResultsRoute,
   AuthenticatedReviewRoute: AuthenticatedReviewRoute,
@@ -348,3 +392,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
