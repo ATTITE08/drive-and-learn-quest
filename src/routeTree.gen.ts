@@ -15,6 +15,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedReviewRouteImport } from './routes/_authenticated/review'
 import { Route as AuthenticatedResultsRouteImport } from './routes/_authenticated/results'
 import { Route as AuthenticatedQuizzesRouteImport } from './routes/_authenticated/quizzes'
+import { Route as AuthenticatedMouvementsRouteImport } from './routes/_authenticated/mouvements'
 import { Route as AuthenticatedIncidentsRouteImport } from './routes/_authenticated/incidents'
 import { Route as AuthenticatedEquipeRouteImport } from './routes/_authenticated/equipe'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -50,6 +51,11 @@ const AuthenticatedResultsRoute = AuthenticatedResultsRouteImport.update({
 const AuthenticatedQuizzesRoute = AuthenticatedQuizzesRouteImport.update({
   id: '/quizzes',
   path: '/quizzes',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMouvementsRoute = AuthenticatedMouvementsRouteImport.update({
+  id: '/mouvements',
+  path: '/mouvements',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedIncidentsRoute = AuthenticatedIncidentsRouteImport.update({
@@ -97,6 +103,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/equipe': typeof AuthenticatedEquipeRoute
   '/incidents': typeof AuthenticatedIncidentsRoute
+  '/mouvements': typeof AuthenticatedMouvementsRoute
   '/quizzes': typeof AuthenticatedQuizzesRouteWithChildren
   '/results': typeof AuthenticatedResultsRoute
   '/review': typeof AuthenticatedReviewRoute
@@ -111,6 +118,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/equipe': typeof AuthenticatedEquipeRoute
   '/incidents': typeof AuthenticatedIncidentsRoute
+  '/mouvements': typeof AuthenticatedMouvementsRoute
   '/quizzes': typeof AuthenticatedQuizzesRouteWithChildren
   '/results': typeof AuthenticatedResultsRoute
   '/review': typeof AuthenticatedReviewRoute
@@ -127,6 +135,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/equipe': typeof AuthenticatedEquipeRoute
   '/_authenticated/incidents': typeof AuthenticatedIncidentsRoute
+  '/_authenticated/mouvements': typeof AuthenticatedMouvementsRoute
   '/_authenticated/quizzes': typeof AuthenticatedQuizzesRouteWithChildren
   '/_authenticated/results': typeof AuthenticatedResultsRoute
   '/_authenticated/review': typeof AuthenticatedReviewRoute
@@ -143,6 +152,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/equipe'
     | '/incidents'
+    | '/mouvements'
     | '/quizzes'
     | '/results'
     | '/review'
@@ -157,6 +167,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/equipe'
     | '/incidents'
+    | '/mouvements'
     | '/quizzes'
     | '/results'
     | '/review'
@@ -172,6 +183,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/equipe'
     | '/_authenticated/incidents'
+    | '/_authenticated/mouvements'
     | '/_authenticated/quizzes'
     | '/_authenticated/results'
     | '/_authenticated/review'
@@ -227,6 +239,13 @@ declare module '@tanstack/react-router' {
       path: '/quizzes'
       fullPath: '/quizzes'
       preLoaderRoute: typeof AuthenticatedQuizzesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/mouvements': {
+      id: '/_authenticated/mouvements'
+      path: '/mouvements'
+      fullPath: '/mouvements'
+      preLoaderRoute: typeof AuthenticatedMouvementsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/incidents': {
@@ -298,6 +317,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedEquipeRoute: typeof AuthenticatedEquipeRoute
   AuthenticatedIncidentsRoute: typeof AuthenticatedIncidentsRoute
+  AuthenticatedMouvementsRoute: typeof AuthenticatedMouvementsRoute
   AuthenticatedQuizzesRoute: typeof AuthenticatedQuizzesRouteWithChildren
   AuthenticatedResultsRoute: typeof AuthenticatedResultsRoute
   AuthenticatedReviewRoute: typeof AuthenticatedReviewRoute
@@ -310,6 +330,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedEquipeRoute: AuthenticatedEquipeRoute,
   AuthenticatedIncidentsRoute: AuthenticatedIncidentsRoute,
+  AuthenticatedMouvementsRoute: AuthenticatedMouvementsRoute,
   AuthenticatedQuizzesRoute: AuthenticatedQuizzesRouteWithChildren,
   AuthenticatedResultsRoute: AuthenticatedResultsRoute,
   AuthenticatedReviewRoute: AuthenticatedReviewRoute,
