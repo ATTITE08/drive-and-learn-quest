@@ -160,6 +160,258 @@ export type Database = {
         }
         Relationships: []
       }
+      duty_logs: {
+        Row: {
+          agent_id: string
+          created_at: string
+          depot_id: string | null
+          end_time: string | null
+          equipment_ok: boolean
+          handover_from: string | null
+          handover_to: string | null
+          id: string
+          observations: string | null
+          post: string
+          service_date: string
+          start_time: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          agent_id: string
+          created_at?: string
+          depot_id?: string | null
+          end_time?: string | null
+          equipment_ok?: boolean
+          handover_from?: string | null
+          handover_to?: string | null
+          id?: string
+          observations?: string | null
+          post?: string
+          service_date?: string
+          start_time?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          agent_id?: string
+          created_at?: string
+          depot_id?: string | null
+          end_time?: string | null
+          equipment_ok?: boolean
+          handover_from?: string | null
+          handover_to?: string | null
+          id?: string
+          observations?: string | null
+          post?: string
+          service_date?: string
+          start_time?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "duty_logs_depot_id_fkey"
+            columns: ["depot_id"]
+            isOneToOne: false
+            referencedRelation: "depots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      incident_actions: {
+        Row: {
+          action: string
+          actor_id: string
+          comment: string | null
+          created_at: string
+          forwarded_to: string | null
+          id: string
+          report_id: string
+        }
+        Insert: {
+          action: string
+          actor_id: string
+          comment?: string | null
+          created_at?: string
+          forwarded_to?: string | null
+          id?: string
+          report_id: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          comment?: string | null
+          created_at?: string
+          forwarded_to?: string | null
+          id?: string
+          report_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "incident_actions_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "incident_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      incident_reports: {
+        Row: {
+          author_id: string
+          closed_at: string | null
+          created_at: string
+          current_holder_id: string | null
+          description: string
+          id: string
+          location: string
+          measures: string | null
+          occurred_at: string
+          severity: string
+          status: string
+          title: string
+          train_number: string | null
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          closed_at?: string | null
+          created_at?: string
+          current_holder_id?: string | null
+          description?: string
+          id?: string
+          location?: string
+          measures?: string | null
+          occurred_at?: string
+          severity?: string
+          status?: string
+          title: string
+          train_number?: string | null
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          closed_at?: string | null
+          created_at?: string
+          current_holder_id?: string | null
+          description?: string
+          id?: string
+          location?: string
+          measures?: string | null
+          occurred_at?: string
+          severity?: string
+          status?: string
+          title?: string
+          train_number?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      movement_lines: {
+        Row: {
+          allowance_code: string | null
+          arrival: string | null
+          created_at: string
+          departure: string | null
+          distance_km: number
+          end_time: string | null
+          hours: number
+          id: string
+          notes: string | null
+          record_id: string
+          service_type: string
+          start_time: string | null
+          train_number: string | null
+          work_date: string
+        }
+        Insert: {
+          allowance_code?: string | null
+          arrival?: string | null
+          created_at?: string
+          departure?: string | null
+          distance_km?: number
+          end_time?: string | null
+          hours?: number
+          id?: string
+          notes?: string | null
+          record_id: string
+          service_type?: string
+          start_time?: string | null
+          train_number?: string | null
+          work_date: string
+        }
+        Update: {
+          allowance_code?: string | null
+          arrival?: string | null
+          created_at?: string
+          departure?: string | null
+          distance_km?: number
+          end_time?: string | null
+          hours?: number
+          id?: string
+          notes?: string | null
+          record_id?: string
+          service_type?: string
+          start_time?: string | null
+          train_number?: string | null
+          work_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "movement_lines_record_id_fkey"
+            columns: ["record_id"]
+            isOneToOne: false
+            referencedRelation: "movement_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      movement_records: {
+        Row: {
+          agent_id: string
+          created_at: string
+          id: string
+          payroll_exported_at: string | null
+          period_end: string
+          period_start: string
+          review_comment: string | null
+          reviewer_id: string | null
+          status: string
+          submitted_at: string | null
+          updated_at: string
+          validated_at: string | null
+        }
+        Insert: {
+          agent_id: string
+          created_at?: string
+          id?: string
+          payroll_exported_at?: string | null
+          period_end: string
+          period_start: string
+          review_comment?: string | null
+          reviewer_id?: string | null
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string
+          validated_at?: string | null
+        }
+        Update: {
+          agent_id?: string
+          created_at?: string
+          id?: string
+          payroll_exported_at?: string | null
+          period_end?: string
+          period_start?: string
+          review_comment?: string | null
+          reviewer_id?: string | null
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string
+          validated_at?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -351,6 +603,100 @@ export type Database = {
             columns: ["document_id"]
             isOneToOne: false
             referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_sheet_lines: {
+        Row: {
+          agent_id: string | null
+          agent_name: string | null
+          created_at: string
+          end_time: string | null
+          id: string
+          notes: string | null
+          role_label: string | null
+          sheet_id: string
+          start_time: string | null
+          task: string | null
+          train_number: string | null
+        }
+        Insert: {
+          agent_id?: string | null
+          agent_name?: string | null
+          created_at?: string
+          end_time?: string | null
+          id?: string
+          notes?: string | null
+          role_label?: string | null
+          sheet_id: string
+          start_time?: string | null
+          task?: string | null
+          train_number?: string | null
+        }
+        Update: {
+          agent_id?: string | null
+          agent_name?: string | null
+          created_at?: string
+          end_time?: string | null
+          id?: string
+          notes?: string | null
+          role_label?: string | null
+          sheet_id?: string
+          start_time?: string | null
+          task?: string | null
+          train_number?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_sheet_lines_sheet_id_fkey"
+            columns: ["sheet_id"]
+            isOneToOne: false
+            referencedRelation: "service_sheets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_sheets: {
+        Row: {
+          created_at: string
+          created_by: string
+          depot_id: string | null
+          id: string
+          notes: string | null
+          service_date: string
+          shift: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          depot_id?: string | null
+          id?: string
+          notes?: string | null
+          service_date: string
+          shift?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          depot_id?: string | null
+          id?: string
+          notes?: string | null
+          service_date?: string
+          shift?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_sheets_depot_id_fkey"
+            columns: ["depot_id"]
+            isOneToOne: false
+            referencedRelation: "depots"
             referencedColumns: ["id"]
           },
         ]

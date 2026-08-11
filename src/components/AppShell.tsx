@@ -22,7 +22,12 @@ export function AppShell({ children, role }: { children: ReactNode; role: AppRol
     { to: "/quizzes", label: "Questionnaires" },
     { to: "/results", label: role === "agent" ? "Mes résultats" : "Résultats" },
     { to: "/equipe", label: "Mon équipe" },
+    { to: "/incidents", label: "Rapports d'incident" },
+    { to: "/mouvements", label: "Relevé de mouvement" },
+    { to: "/feuille-service", label: "Feuille de service" },
+    { to: "/prise-service", label: "Prise de service" },
   ];
+
     if (role === "admin" || role === "formateur") {
       nav.push({ to: "/review", label: "Réponses" });
       nav.push({ to: "/builder", label: "Créer un quiz" });
