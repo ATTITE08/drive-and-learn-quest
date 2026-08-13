@@ -93,9 +93,16 @@ function ResetPasswordPage() {
       <div className="w-full max-w-md">
         <h1 className="font-display text-2xl font-bold">Nouveau mot de passe</h1>
         {!ready ? (
-          <p className="mt-3 text-sm text-muted-foreground">
-            Ouvrez cette page depuis le lien reçu par email pour définir un nouveau mot de passe.
-          </p>
+          <div className="mt-3 space-y-2 text-sm text-muted-foreground">
+            <p>Ouvrez cette page depuis le lien reçu par email pour définir un nouveau mot de passe.</p>
+            {linkError && (
+              <p className="text-destructive">
+                Lien invalide ou expiré ({linkError}). Demandez un nouvel email et ouvrez le lien
+                immédiatement, dans le même navigateur, sans le prévisualiser.
+              </p>
+            )}
+          </div>
+
         ) : (
           <form onSubmit={onSubmit} className="mt-6 space-y-4">
             <div>
