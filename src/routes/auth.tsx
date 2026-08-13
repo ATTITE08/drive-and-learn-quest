@@ -61,14 +61,27 @@ function AuthPage() {
 
   const onGoogle = async () => {
     setLoading(true);
-    const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
-    if (result.error) {
+    try {
+      const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
+      if (result.error) {
+        // La session a pu être établie malgré une erreur de post-traitement
+        const { data } = await supabase.auth.getSession();
+        if (data.session) {
+          navigate({ to: "/dashboard" });
+          return;
+        }
+        setLoading(false);
+        const msg = (result.error as any)?.message ?? String(result.error);
+        return toast.error(`Connexion Google impossible : ${msg}`);
+      }
+      if (result.redirected) return;
+      navigate({ to: "/dashboard" });
+    } catch (e: any) {
       setLoading(false);
-      return toast.error("Connexion Google impossible");
+      toast.error(`Connexion Google impossible : ${e?.message ?? e}`);
     }
-    if (result.redirected) return;
-    navigate({ to: "/dashboard" });
   };
+
 
   return (
     <div className="min-h-screen grid lg:grid-cols-2">
