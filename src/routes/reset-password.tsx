@@ -24,16 +24,59 @@ export const Route = createFileRoute("/reset-password")({
 function ResetPasswordPage() {
   const navigate = useNavigate();
   const [ready, setReady] = useState(false);
+  const [linkError, setLinkError] = useState<string | null>(null);
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setReady(!!data.session));
+    let active = true;
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
-      if (session) setReady(true);
+      if (session && active) setReady(true);
     });
-    return () => sub.subscription.unsubscribe();
+
+    (async () => {
+      const url = new URL(window.location.href);
+      const hash = new URLSearchParams(url.hash.replace(/^#/, ""));
+      const errDesc = url.searchParams.get("error_description") ?? hash.get("error_description");
+
+      const { data: existing } = await supabase.auth.getSession();
+      if (existing.session) {
+        if (active) setReady(true);
+        return;
+      }
+
+      const code = url.searchParams.get("code");
+      const tokenHash = url.searchParams.get("token_hash") ?? url.searchParams.get("token");
+      const accessToken = hash.get("access_token");
+      const refreshToken = hash.get("refresh_token");
+
+      let error: string | null = errDesc;
+      if (accessToken && refreshToken) {
+        const { error: e } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        });
+        error = e?.message ?? null;
+      } else if (code) {
+        const { error: e } = await supabase.auth.exchangeCodeForSession(code);
+        error = e?.message ?? null;
+      } else if (tokenHash) {
+        const { error: e } = await supabase.auth.verifyOtp({ type: "recovery", token_hash: tokenHash });
+        error = e?.message ?? null;
+      }
+
+      if (!active) return;
+      const { data: after } = await supabase.auth.getSession();
+      if (after.session) setReady(true);
+      else if (error) setLinkError(error);
+    })();
+
+    return () => {
+      active = false;
+      sub.subscription.unsubscribe();
+    };
   }, []);
+
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
