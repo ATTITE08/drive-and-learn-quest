@@ -48,6 +48,17 @@ function AuthPage() {
     toast.success("Compte créé, vous pouvez vous connecter");
   };
 
+  const onForgot = async () => {
+    if (!email) return toast.error("Saisissez d'abord votre email");
+    setLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setLoading(false);
+    if (error) return toast.error(error.message);
+    toast.success("Email de réinitialisation envoyé");
+  };
+
   const onGoogle = async () => {
     setLoading(true);
     const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
