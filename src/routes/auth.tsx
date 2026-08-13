@@ -105,6 +105,13 @@ function AuthPage() {
                   <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>Se connecter</Button>
+                <button
+                  type="button"
+                  onClick={onForgot}
+                  className="w-full text-center text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground"
+                >
+                  Mot de passe oublié ?
+                </button>
               </form>
             </TabsContent>
 
