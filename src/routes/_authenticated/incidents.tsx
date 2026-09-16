@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { AlertTriangle, Send, CheckCircle2, ArrowUpRight } from "lucide-react";
+import { AlertTriangle, Send, CheckCircle2, ArrowUpRight, ClipboardList } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/incidents")({
   component: IncidentsPage,
