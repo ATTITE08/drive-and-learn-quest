@@ -115,9 +115,13 @@ function IncidentsPage() {
         supabase.from("profiles").select("id,full_name,email,level,manager_id,matricule").eq("id", uid).maybeSingle(),
         supabase.from("incident_reports").select("*").order("created_at", { ascending: false }),
       ]);
-      const ids = Array.from(new Set((reports ?? []).map((r: any) => r.author_id)));
+      const ids = Array.from(
+        new Set(
+          (reports ?? []).flatMap((r: any) => [r.author_id, r.current_holder_id]).filter(Boolean) as string[],
+        ),
+      );
       const { data: authors } = ids.length
-        ? await supabase.from("profiles").select("id,full_name,email").in("id", ids)
+        ? await supabase.from("profiles").select("id,full_name,email,level,matricule").in("id", ids)
         : { data: [] as any[] };
       const { data: actions } = await supabase.from("incident_actions").select("*").order("created_at", { ascending: true });
       return { uid, me, reports: reports ?? [], authors: authors ?? [], actions: actions ?? [] };
