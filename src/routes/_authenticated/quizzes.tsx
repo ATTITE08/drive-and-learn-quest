@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useState } from "react";
-import { Play, Filter, Send, History, Pencil, Trash2, Plus } from "lucide-react";
+import { Play, Filter, Send, History, Pencil, Trash2, Plus, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/quizzes")({
@@ -29,7 +29,8 @@ function Quizzes() {
   const qc = useQueryClient();
 
   const { data: quizzes, isLoading } = useQuery({
-    queryKey: ["quizzes", subject, level, isStaff],
+    queryKey: ["quizzes", subject, level, isStaff, roleData?.userId],
+    enabled: !!roleData?.userId,
     queryFn: async () => {
       let q = supabase
         .from("quizzes")
@@ -37,9 +38,13 @@ function Quizzes() {
         .order("created_at", { ascending: false });
       if (subject !== "all") q = q.eq("subject", subject as any);
       if (level !== "all") q = q.eq("level", level as any);
-      const { data, error } = await q;
+      const [{ data, error }, { data: myAttempts }] = await Promise.all([
+        q,
+        supabase.from("attempts").select("quiz_id").eq("user_id", roleData!.userId!),
+      ]);
       if (error) throw error;
-      return data ?? [];
+      const done = new Set((myAttempts ?? []).map((a: any) => a.quiz_id));
+      return (data ?? []).map((quiz: any) => ({ ...quiz, alreadyDone: done.has(quiz.id) }));
     },
   });
 
@@ -186,13 +191,17 @@ function Quizzes() {
                 <p className="text-sm text-muted-foreground mt-1">{q.questions?.[0]?.count ?? 0} question(s)</p>
 
                 <div className="mt-auto pt-4 flex flex-wrap gap-2">
-                  {!isDraft && (
+                  {!isDraft && (q.alreadyDone ? (
+                    <Button size="sm" variant="outline" disabled>
+                      <CheckCircle2 className="h-4 w-4 mr-1" /> Déjà passé
+                    </Button>
+                  ) : (
                     <Button asChild size="sm">
                       <Link to="/quiz/$id" params={{ id: q.id }}>
                         <Play className="h-4 w-4 mr-1" /> Démarrer
                       </Link>
                     </Button>
-                  )}
+                  ))}
                   {isStaff && (
                     <>
                       <Button
