@@ -134,6 +134,12 @@ function IncidentsPage() {
     const a = data?.authors.find((x: any) => x.id === id);
     return a?.full_name ?? a?.email ?? "Agent";
   };
+  const personLabel = (id?: string | null) => {
+    if (!id) return undefined;
+    const p = data?.authors.find((x: any) => x.id === id) as any;
+    if (!p) return "Agent";
+    return [p.full_name ?? p.email ?? "Agent", p.matricule && `Mle ${p.matricule}`].filter(Boolean).join(" · ");
+  };
   const getAn = (id: string, current: any) => an[id] ?? { ...emptyAnalysis(), ...(current ?? {}) };
 
   const create = useMutation({
