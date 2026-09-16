@@ -433,6 +433,72 @@ function IncidentsPage() {
       )}
 
       <Card className="p-6">
+        <h2 className="flex items-center gap-2 font-display text-lg font-semibold">
+          <ClipboardList className="h-5 w-5" /> Suivi des rapports ({tracking.length})
+        </h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Statut de chaque rapport de votre parcours hiérarchique, avec la date de remontée, l'analyse du CTRA et les observations du CDPC.
+        </p>
+        {isLoading ? (
+          <p className="mt-3 text-muted-foreground">Chargement…</p>
+        ) : tracking.length === 0 ? (
+          <p className="mt-3 text-muted-foreground">Aucun rapport à suivre.</p>
+        ) : (
+          <div className="mt-4 space-y-3">
+            {tracking.map((r: any) => {
+              const acts = (data?.actions ?? []).filter((x: any) => x.report_id === r.id);
+              const sent = acts.find((x: any) => x.action === "transmission");
+              const last = acts[acts.length - 1];
+              const a = (r.analysis ?? {}) as any;
+              return (
+                <div key={r.id} className="rounded-lg border p-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-medium">{r.title}</span>
+                    <Badge variant="outline">{STATUS_LABEL[r.status] ?? r.status}</Badge>
+                    <Badge variant="secondary">{SEVERITIES.find((s) => s.value === r.severity)?.label ?? r.severity}</Badge>
+                  </div>
+                  <div className="mt-2 grid gap-1 text-sm sm:grid-cols-2">
+                    <Line label="Agent" value={personLabel(r.author_id)} />
+                    <Line label="Incident survenu le" value={new Date(r.occurred_at).toLocaleString("fr-FR")} />
+                    <Line
+                      label="Remonté le"
+                      value={sent ? new Date(sent.created_at).toLocaleString("fr-FR") : "Non transmis (brouillon)"}
+                    />
+                    <Line
+                      label="Chez"
+                      value={
+                        r.status === "cloture"
+                          ? `Clôturé le ${r.closed_at ? new Date(r.closed_at).toLocaleDateString("fr-FR") : "—"}`
+                          : r.current_holder_id
+                            ? personLabel(r.current_holder_id)
+                            : "En attente de transmission"
+                      }
+                    />
+                    <Line
+                      label="Dernier mouvement"
+                      value={last ? `${last.action} — ${new Date(last.created_at).toLocaleString("fr-FR")}` : undefined}
+                    />
+                  </div>
+                  <div className="mt-2 space-y-1 rounded-md bg-muted/40 p-3">
+                    <Line label="Analyse du CTRA — résultat de l'enquête" value={a.ctra_resultat} />
+                    <Line label="Conséquences" value={a.ctra_consequences} />
+                    <Line label="Examen critique" value={a.ctra_examen} />
+                    <Line label="Conclusion" value={a.ctra_conclusion} />
+                    <Line label="Propositions / recommandations" value={a.ctra_propositions} />
+                    <Line label="Observations du CDPC" value={a.cdpc_observations} />
+                    <Line label="Autres observations" value={a.autres_observations} />
+                    {!a.ctra_resultat && !a.ctra_conclusion && !a.cdpc_observations && (
+                      <p className="text-sm text-muted-foreground">Analyse du CTRA en attente.</p>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </Card>
+
+      <Card className="p-6">
         <h2 className="font-display text-lg font-semibold">Mes rapports</h2>
         {isLoading ? (
           <p className="mt-3 text-muted-foreground">Chargement…</p>
