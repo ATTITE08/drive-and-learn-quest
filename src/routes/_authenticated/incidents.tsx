@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { AlertTriangle, Send, CheckCircle2, ArrowUpRight } from "lucide-react";
+import { AlertTriangle, Send, CheckCircle2, ArrowUpRight, ClipboardList } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/incidents")({
   component: IncidentsPage,
@@ -115,9 +115,13 @@ function IncidentsPage() {
         supabase.from("profiles").select("id,full_name,email,level,manager_id,matricule").eq("id", uid).maybeSingle(),
         supabase.from("incident_reports").select("*").order("created_at", { ascending: false }),
       ]);
-      const ids = Array.from(new Set((reports ?? []).map((r: any) => r.author_id)));
+      const ids = Array.from(
+        new Set(
+          (reports ?? []).flatMap((r: any) => [r.author_id, r.current_holder_id]).filter(Boolean) as string[],
+        ),
+      );
       const { data: authors } = ids.length
-        ? await supabase.from("profiles").select("id,full_name,email").in("id", ids)
+        ? await supabase.from("profiles").select("id,full_name,email,level,matricule").in("id", ids)
         : { data: [] as any[] };
       const { data: actions } = await supabase.from("incident_actions").select("*").order("created_at", { ascending: true });
       return { uid, me, reports: reports ?? [], authors: authors ?? [], actions: actions ?? [] };
@@ -129,6 +133,12 @@ function IncidentsPage() {
   const authorName = (id: string) => {
     const a = data?.authors.find((x: any) => x.id === id);
     return a?.full_name ?? a?.email ?? "Agent";
+  };
+  const personLabel = (id?: string | null) => {
+    if (!id) return undefined;
+    const p = data?.authors.find((x: any) => x.id === id) as any;
+    if (!p) return "Agent";
+    return [p.full_name ?? p.email ?? "Agent", p.matricule && `Mle ${p.matricule}`].filter(Boolean).join(" · ");
   };
   const getAn = (id: string, current: any) => an[id] ?? { ...emptyAnalysis(), ...(current ?? {}) };
 
@@ -216,6 +226,7 @@ function IncidentsPage() {
 
   const mine = (data?.reports ?? []).filter((r: any) => r.author_id === uid);
   const toHandle = (data?.reports ?? []).filter((r: any) => r.current_holder_id === uid && r.author_id !== uid);
+  const tracking = (data?.reports ?? []).filter((r: any) => r.status !== "brouillon" || r.author_id === uid);
 
   const ReportCard = ({ r, own }: { r: any; own: boolean }) => {
     const acts = (data?.actions ?? []).filter((a: any) => a.report_id === r.id);
@@ -427,6 +438,72 @@ function IncidentsPage() {
           </div>
         </Card>
       )}
+
+      <Card className="p-6">
+        <h2 className="flex items-center gap-2 font-display text-lg font-semibold">
+          <ClipboardList className="h-5 w-5" /> Suivi des rapports ({tracking.length})
+        </h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Statut de chaque rapport de votre parcours hiérarchique, avec la date de remontée, l'analyse du CTRA et les observations du CDPC.
+        </p>
+        {isLoading ? (
+          <p className="mt-3 text-muted-foreground">Chargement…</p>
+        ) : tracking.length === 0 ? (
+          <p className="mt-3 text-muted-foreground">Aucun rapport à suivre.</p>
+        ) : (
+          <div className="mt-4 space-y-3">
+            {tracking.map((r: any) => {
+              const acts = (data?.actions ?? []).filter((x: any) => x.report_id === r.id);
+              const sent = acts.find((x: any) => x.action === "transmission");
+              const last = acts[acts.length - 1];
+              const a = (r.analysis ?? {}) as any;
+              return (
+                <div key={r.id} className="rounded-lg border p-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-medium">{r.title}</span>
+                    <Badge variant="outline">{STATUS_LABEL[r.status] ?? r.status}</Badge>
+                    <Badge variant="secondary">{SEVERITIES.find((s) => s.value === r.severity)?.label ?? r.severity}</Badge>
+                  </div>
+                  <div className="mt-2 grid gap-1 text-sm sm:grid-cols-2">
+                    <Line label="Agent" value={personLabel(r.author_id)} />
+                    <Line label="Incident survenu le" value={new Date(r.occurred_at).toLocaleString("fr-FR")} />
+                    <Line
+                      label="Remonté le"
+                      value={sent ? new Date(sent.created_at).toLocaleString("fr-FR") : "Non transmis (brouillon)"}
+                    />
+                    <Line
+                      label="Chez"
+                      value={
+                        r.status === "cloture"
+                          ? `Clôturé le ${r.closed_at ? new Date(r.closed_at).toLocaleDateString("fr-FR") : "—"}`
+                          : r.current_holder_id
+                            ? personLabel(r.current_holder_id)
+                            : "En attente de transmission"
+                      }
+                    />
+                    <Line
+                      label="Dernier mouvement"
+                      value={last ? `${last.action} — ${new Date(last.created_at).toLocaleString("fr-FR")}` : undefined}
+                    />
+                  </div>
+                  <div className="mt-2 space-y-1 rounded-md bg-muted/40 p-3">
+                    <Line label="Analyse du CTRA — résultat de l'enquête" value={a.ctra_resultat} />
+                    <Line label="Conséquences" value={a.ctra_consequences} />
+                    <Line label="Examen critique" value={a.ctra_examen} />
+                    <Line label="Conclusion" value={a.ctra_conclusion} />
+                    <Line label="Propositions / recommandations" value={a.ctra_propositions} />
+                    <Line label="Observations du CDPC" value={a.cdpc_observations} />
+                    <Line label="Autres observations" value={a.autres_observations} />
+                    {!a.ctra_resultat && !a.ctra_conclusion && !a.cdpc_observations && (
+                      <p className="text-sm text-muted-foreground">Analyse du CTRA en attente.</p>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </Card>
 
       <Card className="p-6">
         <h2 className="font-display text-lg font-semibold">Mes rapports</h2>
