@@ -226,6 +226,7 @@ function IncidentsPage() {
 
   const mine = (data?.reports ?? []).filter((r: any) => r.author_id === uid);
   const toHandle = (data?.reports ?? []).filter((r: any) => r.current_holder_id === uid && r.author_id !== uid);
+  const tracking = (data?.reports ?? []).filter((r: any) => r.status !== "brouillon" || r.author_id === uid);
 
   const ReportCard = ({ r, own }: { r: any; own: boolean }) => {
     const acts = (data?.actions ?? []).filter((a: any) => a.report_id === r.id);
