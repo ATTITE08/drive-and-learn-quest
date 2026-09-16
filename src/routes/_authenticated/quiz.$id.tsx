@@ -79,23 +79,52 @@ function QuizPage() {
     queryFn: () => fetchQuiz({ data: { quizId: id } }),
   });
 
+  const [alreadyDone, setAlreadyDone] = useState(false);
+
   useEffect(() => {
     (async () => {
-      if (!data?.quiz || attemptId) return;
+      if (!data?.quiz || attemptId || alreadyDone) return;
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) return;
+      const { data: existing } = await supabase
+        .from("attempts")
+        .select("id")
+        .eq("quiz_id", id)
+        .eq("user_id", u.user.id)
+        .maybeSingle();
+      if (existing) {
+        setAlreadyDone(true);
+        return;
+      }
       const { data: row, error } = await supabase
         .from("attempts")
         .insert({ quiz_id: id, user_id: u.user.id, total: data.questions.length })
         .select("id")
         .single();
-      if (error) toast.error(error.message);
-      else setAttemptId(row.id);
+      if (error) {
+        if (error.code === "23505") setAlreadyDone(true);
+        else toast.error(error.message);
+      } else setAttemptId(row.id);
     })();
-  }, [data, attemptId, id]);
+  }, [data, attemptId, alreadyDone, id]);
 
   if (isLoading) return <p className="text-muted-foreground">Chargement…</p>;
   if (!data?.quiz) return <p>Questionnaire introuvable.</p>;
+  if (alreadyDone) {
+    return (
+      <Card className="mx-auto max-w-lg p-8 text-center space-y-4">
+        <Lock className="mx-auto h-10 w-10 text-amber" />
+        <h1 className="font-display text-2xl font-bold">Questionnaire déjà passé</h1>
+        <p className="text-muted-foreground">
+          Vous avez déjà passé ce questionnaire. Chaque agent ne peut le passer qu'une seule fois.
+        </p>
+        <div className="flex justify-center gap-3">
+          <Button variant="outline" onClick={() => navigate({ to: "/quizzes" })}>Retour aux questionnaires</Button>
+          <Button onClick={() => navigate({ to: "/results" })}>Voir mes résultats</Button>
+        </div>
+      </Card>
+    );
+  }
   if (!data.questions.length) return <p>Aucune question dans ce questionnaire.</p>;
 
   const questions = data.questions as any[];
