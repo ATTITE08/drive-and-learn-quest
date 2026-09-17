@@ -320,6 +320,7 @@ export type Database = {
           arrival: string | null
           created_at: string
           departure: string | null
+          details: Json
           distance_km: number
           end_time: string | null
           hours: number
@@ -336,6 +337,7 @@ export type Database = {
           arrival?: string | null
           created_at?: string
           departure?: string | null
+          details?: Json
           distance_km?: number
           end_time?: string | null
           hours?: number
@@ -352,6 +354,7 @@ export type Database = {
           arrival?: string | null
           created_at?: string
           departure?: string | null
+          details?: Json
           distance_km?: number
           end_time?: string | null
           hours?: number
@@ -377,6 +380,7 @@ export type Database = {
         Row: {
           agent_id: string
           created_at: string
+          header: Json
           id: string
           payroll_exported_at: string | null
           period_end: string
@@ -387,10 +391,12 @@ export type Database = {
           submitted_at: string | null
           updated_at: string
           validated_at: string | null
+          visas: Json
         }
         Insert: {
           agent_id: string
           created_at?: string
+          header?: Json
           id?: string
           payroll_exported_at?: string | null
           period_end: string
@@ -401,10 +407,12 @@ export type Database = {
           submitted_at?: string | null
           updated_at?: string
           validated_at?: string | null
+          visas?: Json
         }
         Update: {
           agent_id?: string
           created_at?: string
+          header?: Json
           id?: string
           payroll_exported_at?: string | null
           period_end?: string
@@ -415,6 +423,7 @@ export type Database = {
           submitted_at?: string | null
           updated_at?: string
           validated_at?: string | null
+          visas?: Json
         }
         Relationships: []
       }
