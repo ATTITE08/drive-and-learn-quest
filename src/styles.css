@@ -105,3 +105,13 @@
   }
   h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -0.02em; }
 }
+
+@media print {
+  body { background: none; }
+  .no-print, header, footer, nav { display: none !important; }
+  main { padding: 0 !important; max-width: none !important; }
+  .print-sheet { display: block !important; }
+  .print-sheet table { font-size: 10px; }
+  @page { size: A4 landscape; margin: 10mm; }
+}
+.print-sheet { display: none; }
