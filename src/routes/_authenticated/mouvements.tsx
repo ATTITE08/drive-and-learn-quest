@@ -35,31 +35,29 @@ const STATUS: Record<string, { label: string; variant?: "default" | "secondary" 
 
 const emptyLine = () => ({
   work_date: new Date().toISOString().slice(0, 10),
-  service_type: "conduite",
+  machine_number: "",
   train_number: "",
-  departure: "",
-  arrival: "",
-  start_time: "",
-  end_time: "",
+  departure_code: "",
+  departure_day: "",
+  departure_hour: "",
+  departure_minute: "",
+  arrival_code: "",
+  arrival_day: "",
+  arrival_hour: "",
+  arrival_minute: "",
   distance_km: "",
-  hours: "",
-  allowance_code: "",
-  notes: "",
-  engin: "",
-  decouche: false,
-  repas: "",
-  prise_service: "",
-  fin_service: "",
+  observation: "",
 });
 
 type HeaderData = {
-  depot?: string;
   mois?: string;
+  annee?: string;
   nom?: string;
+  prenom?: string;
   matricule?: string;
-  grade?: string;
+  etablissement?: string;
   residence?: string;
-  categorie?: string;
+  nombre_lignes?: string;
 };
 
 function MovementsPage() {
@@ -107,9 +105,6 @@ function MovementsPage() {
     const l = linesOf(id);
     return {
       km: l.reduce((s: number, x: any) => s + Number(x.distance_km || 0), 0),
-      h: l.reduce((s: number, x: any) => s + Number(x.hours || 0), 0),
-      nuits: l.filter((x: any) => x.details?.decouche).length,
-      repas: l.reduce((s: number, x: any) => s + Number(x.details?.repas || 0), 0),
     };
   };
   const headerOf = (r: any): HeaderData => headers[r.id] ?? (r.header as HeaderData) ?? {};
@@ -128,8 +123,8 @@ function MovementsPage() {
         header: {
           nom: me?.full_name ?? "",
           matricule: me?.matricule ?? "",
-          grade: me?.level ?? "",
           mois: new Date(period.start).toLocaleDateString("fr-FR", { month: "long", year: "numeric" }),
+          annee: new Date(period.start).getFullYear().toString(),
         },
       });
       if (error) throw error;
@@ -152,22 +147,24 @@ function MovementsPage() {
       const { error } = await supabase.from("movement_lines").insert({
         record_id: recordId,
         work_date: line.work_date,
-        service_type: line.service_type,
+        service_type: "personnel_roulant",
         train_number: line.train_number || null,
-        departure: line.departure || null,
-        arrival: line.arrival || null,
-        start_time: line.start_time || null,
-        end_time: line.end_time || null,
+        departure: line.departure_code || null,
+        arrival: line.arrival_code || null,
+        start_time: [line.departure_hour, line.departure_minute].filter(Boolean).join(":"),
+        end_time: [line.arrival_hour, line.arrival_minute].filter(Boolean).join(":"),
         distance_km: Number(line.distance_km || 0),
-        hours: Number(line.hours || 0),
-        allowance_code: line.allowance_code || null,
-        notes: line.notes || null,
+        hours: 0,
+        allowance_code: line.observation || null,
+        notes: null,
         details: {
-          engin: line.engin || null,
-          decouche: line.decouche,
-          repas: Number(line.repas || 0),
-          prise_service: line.prise_service || null,
-          fin_service: line.fin_service || null,
+          machine_number: line.machine_number || null,
+          departure_day: line.departure_day || null,
+          departure_hour: line.departure_hour || null,
+          departure_minute: line.departure_minute || null,
+          arrival_day: line.arrival_day || null,
+          arrival_hour: line.arrival_hour || null,
+          arrival_minute: line.arrival_minute || null,
         } as any,
       });
       if (error) throw error;
@@ -243,36 +240,38 @@ function MovementsPage() {
     if (!l.length) return <p className="mt-2 text-sm text-muted-foreground">Aucun mouvement saisi.</p>;
     return (
       <div className="mt-3 overflow-x-auto">
-        <table className="w-full text-sm">
+        <table className="w-full min-w-[920px] border-collapse text-center text-xs">
           <thead className="text-left text-xs uppercase text-muted-foreground">
             <tr>
-              <th className="py-1 pr-3">Date</th>
-              <th className="py-1 pr-3">Nature</th>
-              <th className="py-1 pr-3">Train</th>
-              <th className="py-1 pr-3">Engin</th>
-              <th className="py-1 pr-3">Parcours</th>
-              <th className="py-1 pr-3">Horaires</th>
-              <th className="py-1 pr-3">Km</th>
-              <th className="py-1 pr-3">Heures</th>
-              <th className="py-1 pr-3">Découcher</th>
-              <th className="py-1 pr-3">Repas</th>
-              <th className="py-1 pr-3">Code</th>
+              <th className="py-1 pr-3">N° machine</th>
+              <th className="py-1 pr-3">Désignation train</th>
+              <th className="py-1 pr-3">Départ — code gare</th>
+              <th className="py-1 pr-3">J</th>
+              <th className="py-1 pr-3">H</th>
+              <th className="py-1 pr-3">Mn</th>
+              <th className="py-1 pr-3">Arrivée — code gare</th>
+              <th className="py-1 pr-3">J</th>
+              <th className="py-1 pr-3">H</th>
+              <th className="py-1 pr-3">Mn</th>
+              <th className="py-1 pr-3">Distance si PK</th>
+              <th className="py-1 pr-3">Observations</th>
               {editable && <th />}
             </tr>
           </thead>
           <tbody>
             {l.map((x: any) => (
               <tr key={x.id} className="border-t">
-                <td className="py-1 pr-3">{x.work_date}</td>
-                <td className="py-1 pr-3">{x.service_type}</td>
+                <td className="py-1 pr-3">{x.details?.machine_number ?? "—"}</td>
                 <td className="py-1 pr-3">{x.train_number ?? "—"}</td>
-                <td className="py-1 pr-3">{x.details?.engin ?? "—"}</td>
-                <td className="py-1 pr-3">{[x.departure, x.arrival].filter(Boolean).join(" → ") || "—"}</td>
-                <td className="py-1 pr-3">{[x.start_time, x.end_time].filter(Boolean).join(" - ") || "—"}</td>
+                <td className="py-1 pr-3">{x.departure ?? "—"}</td>
+                <td className="py-1 pr-3">{x.details?.departure_day ?? "—"}</td>
+                <td className="py-1 pr-3">{x.details?.departure_hour ?? "—"}</td>
+                <td className="py-1 pr-3">{x.details?.departure_minute ?? "—"}</td>
+                <td className="py-1 pr-3">{x.arrival ?? "—"}</td>
+                <td className="py-1 pr-3">{x.details?.arrival_day ?? "—"}</td>
+                <td className="py-1 pr-3">{x.details?.arrival_hour ?? "—"}</td>
+                <td className="py-1 pr-3">{x.details?.arrival_minute ?? "—"}</td>
                 <td className="py-1 pr-3">{Number(x.distance_km)}</td>
-                <td className="py-1 pr-3">{Number(x.hours)}</td>
-                <td className="py-1 pr-3">{x.details?.decouche ? "Oui" : "—"}</td>
-                <td className="py-1 pr-3">{Number(x.details?.repas || 0) || "—"}</td>
                 <td className="py-1 pr-3">{x.allowance_code ?? "—"}</td>
                 {editable && (
                   <td className="py-1">
