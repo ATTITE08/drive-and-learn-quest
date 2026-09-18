@@ -459,112 +459,92 @@ function MovementsPage() {
 
 function PrintSheet({ record, header, lines, totals, agent }: { record: any; header: HeaderData; lines: any[]; totals: any; agent: string }) {
   const visas = record.visas ?? {};
-  const cell = "border border-black px-1 py-0.5 align-top";
+  const cell = "border border-foreground px-1 py-1 align-middle";
   return (
-    <div className="mx-auto w-full p-2 text-[11px]">
-      <div className="flex items-start justify-between border-b-2 border-black pb-2">
-        <div className="font-bold">CAMRAIL</div>
-        <div className="text-center">
-          <div className="text-sm font-bold uppercase">Relevé de mouvement du personnel</div>
-          <div className="text-[10px]">Période du {record.period_start} au {record.period_end}</div>
+    <div className="mx-auto w-full bg-background p-2 text-[10px] text-foreground">
+      <div className="border border-foreground">
+        <div className="grid grid-cols-[120px_1fr_120px] border-b border-foreground px-2 py-1">
+          <div className="text-[8px]">CAMRAIL</div>
+          <div className="text-center text-sm font-semibold uppercase">Relevé des mouvements du personnel roulant</div>
+          <div />
         </div>
-        <div className="text-right text-[10px]">Statut : {STATUS[record.status]?.label ?? record.status}</div>
+        <div className="grid grid-cols-2 gap-x-8 px-2 py-2 leading-7">
+          <div>
+            <p>MAT-MBR-DIF-DT</p>
+            <p><b>NOM</b> : {header.nom || agent}</p>
+            <p><b>PRÉNOM</b> : {header.prenom ?? ""}</p>
+            <p><b>MATRICULE</b> : {header.matricule ?? ""}</p>
+          </div>
+          <div>
+            <p><b>MOIS</b> : {header.mois ?? ""} &nbsp;&nbsp; <b>ANNÉE</b> : {header.annee ?? ""}</p>
+            <p><b>ÉTABLISSEMENT</b> : {header.etablissement ?? ""} &nbsp;&nbsp; <b>NOMBRE DE LIGNES</b> : {header.nombre_lignes ?? ""}</p>
+            <p><b>RÉSIDENCE</b> : {header.residence ?? ""}</p>
+          </div>
+        </div>
       </div>
 
-      <table className="mt-2 w-full border-collapse">
-        <tbody>
-          <tr>
-            <td className={cell}><b>Dépôt :</b> {header.depot ?? ""}</td>
-            <td className={cell}><b>Mois :</b> {header.mois ?? ""}</td>
-            <td className={cell}><b>Nom et prénom :</b> {header.nom || agent}</td>
-          </tr>
-          <tr>
-            <td className={cell}><b>Matricule :</b> {header.matricule ?? ""}</td>
-            <td className={cell}><b>Grade / fonction :</b> {header.grade ?? ""}</td>
-            <td className={cell}><b>Catégorie :</b> {header.categorie ?? ""} — <b>Résidence :</b> {header.residence ?? ""}</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <table className="mt-2 w-full border-collapse">
+      <table className="w-full border-collapse text-center">
         <thead>
-          <tr className="bg-neutral-200">
-            <th className={cell}>Date</th>
-            <th className={cell}>Nature</th>
-            <th className={cell}>Train</th>
-            <th className={cell}>Engin</th>
-            <th className={cell}>Départ</th>
-            <th className={cell}>H. dép.</th>
-            <th className={cell}>Arrivée</th>
-            <th className={cell}>H. arr.</th>
-            <th className={cell}>Prise serv.</th>
-            <th className={cell}>Fin serv.</th>
-            <th className={cell}>Km</th>
-            <th className={cell}>Heures</th>
-            <th className={cell}>Déc.</th>
-            <th className={cell}>Repas</th>
-            <th className={cell}>Code</th>
-            <th className={cell}>Observations</th>
+          <tr>
+            <th rowSpan={2} className={cell}>NUMÉRO DE LA<br />MACHINE</th>
+            <th rowSpan={2} className={cell}>DÉSIGNATION<br />DE TRAIN</th>
+            <th colSpan={4} className={cell}>DÉPART</th>
+            <th colSpan={4} className={cell}>ARRIVÉE</th>
+            <th rowSpan={2} className={cell}>DISTANCE<br />SI PK</th>
+            <th rowSpan={2} className={cell}>OBSERVATIONS</th>
+          </tr>
+          <tr>
+            <th className={cell}>CODE<br />GARE</th><th className={cell}>J</th><th className={cell}>H</th><th className={cell}>Mn</th>
+            <th className={cell}>CODE<br />GARE</th><th className={cell}>J</th><th className={cell}>H</th><th className={cell}>Mn</th>
           </tr>
         </thead>
         <tbody>
           {lines.map((x: any) => (
             <tr key={x.id}>
-              <td className={cell}>{x.work_date}</td>
-              <td className={cell}>{x.service_type}</td>
+              <td className={cell}>{x.details?.machine_number ?? ""}</td>
               <td className={cell}>{x.train_number ?? ""}</td>
-              <td className={cell}>{x.details?.engin ?? ""}</td>
               <td className={cell}>{x.departure ?? ""}</td>
-              <td className={cell}>{x.start_time ?? ""}</td>
+              <td className={cell}>{x.details?.departure_day ?? ""}</td>
+              <td className={cell}>{x.details?.departure_hour ?? ""}</td>
+              <td className={cell}>{x.details?.departure_minute ?? ""}</td>
               <td className={cell}>{x.arrival ?? ""}</td>
-              <td className={cell}>{x.end_time ?? ""}</td>
-              <td className={cell}>{x.details?.prise_service ?? ""}</td>
-              <td className={cell}>{x.details?.fin_service ?? ""}</td>
-              <td className={cell}>{Number(x.distance_km)}</td>
-              <td className={cell}>{Number(x.hours)}</td>
-              <td className={cell}>{x.details?.decouche ? "X" : ""}</td>
-              <td className={cell}>{Number(x.details?.repas || 0) || ""}</td>
+              <td className={cell}>{x.details?.arrival_day ?? ""}</td>
+              <td className={cell}>{x.details?.arrival_hour ?? ""}</td>
+              <td className={cell}>{x.details?.arrival_minute ?? ""}</td>
+              <td className={cell}>{Number(x.distance_km) || ""}</td>
               <td className={cell}>{x.allowance_code ?? ""}</td>
-              <td className={cell}>{x.notes ?? ""}</td>
             </tr>
           ))}
-          {Array.from({ length: Math.max(0, 12 - lines.length) }).map((_, i) => (
+          {Array.from({ length: Math.max(0, 24 - lines.length) }).map((_, i) => (
             <tr key={`e${i}`}>
-              {Array.from({ length: 16 }).map((__, j) => <td key={j} className={cell}>&nbsp;</td>)}
+              {Array.from({ length: 12 }).map((__, j) => <td key={j} className={cell}>&nbsp;</td>)}
             </tr>
           ))}
-          <tr className="font-bold">
-            <td className={cell} colSpan={10}>TOTAUX</td>
-            <td className={cell}>{totals.km}</td>
-            <td className={cell}>{totals.h}</td>
-            <td className={cell}>{totals.nuits}</td>
-            <td className={cell}>{totals.repas}</td>
-            <td className={cell} colSpan={2}></td>
-          </tr>
         </tbody>
       </table>
 
-      <table className="mt-3 w-full border-collapse">
+      <table className="w-full border-collapse text-[9px]">
         <tbody>
           <tr>
-            <td className={cell} style={{ height: 70, width: "33%" }}>
-              <b>Visa de l'agent</b><br />
+            <td className={`${cell} h-16 w-1/5`}>
+              <b>VISA DE L'AGENT</b><br />
               {visas.agent?.nom ?? header.nom ?? ""}<br />
               {visas.agent?.date ? `Le ${visas.agent.date}` : ""}
             </td>
-            <td className={cell} style={{ height: 70, width: "34%" }}>
-              <b>Visa du chef de traction</b><br />
+            <td className={`${cell} h-16 w-1/5`}>
+              <b>VISA DU CHEF DE GROUPE</b><br />
               {visas.ctra?.nom ?? ""}<br />
-              {visas.ctra?.date ? `Le ${visas.ctra.date}` : ""}<br />
-              {visas.ctra?.observation ?? record.review_comment ?? ""}
+              {visas.ctra?.date ? `Le ${visas.ctra.date}` : ""}
             </td>
-            <td className={cell} style={{ height: 70, width: "33%" }}>
-              <b>Visa du chef de dépôt / paye</b><br />
-              {record.payroll_exported_at ? `Inscrit en paye le ${new Date(record.payroll_exported_at).toLocaleDateString("fr-FR")}` : ""}
-            </td>
+            <td className={`${cell} h-16 w-1/5`}><b>VISA DU CHEF D'ÉTABLISSEMENT</b></td>
+            <td className={`${cell} h-16 w-2/5`}><b>DRH</b></td>
           </tr>
         </tbody>
       </table>
+      <div className="mt-2 grid grid-cols-5 text-[9px]">
+        <span>1 = LIGNE (DT-DIF)</span><span>2 = LIGNE (MBR)</span><span>3 = MANŒUVRE</span><span>4 = RÉSERVE</span><span>5 = VOITURE</span>
+      </div>
+      <div className="mt-1 text-right text-[8px]">Distance totale saisie : {totals.km} km</div>
     </div>
   );
 }
