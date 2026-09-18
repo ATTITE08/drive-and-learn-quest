@@ -35,31 +35,29 @@ const STATUS: Record<string, { label: string; variant?: "default" | "secondary" 
 
 const emptyLine = () => ({
   work_date: new Date().toISOString().slice(0, 10),
-  service_type: "conduite",
+  machine_number: "",
   train_number: "",
-  departure: "",
-  arrival: "",
-  start_time: "",
-  end_time: "",
+  departure_code: "",
+  departure_day: "",
+  departure_hour: "",
+  departure_minute: "",
+  arrival_code: "",
+  arrival_day: "",
+  arrival_hour: "",
+  arrival_minute: "",
   distance_km: "",
-  hours: "",
-  allowance_code: "",
-  notes: "",
-  engin: "",
-  decouche: false,
-  repas: "",
-  prise_service: "",
-  fin_service: "",
+  observation: "",
 });
 
 type HeaderData = {
-  depot?: string;
   mois?: string;
+  annee?: string;
   nom?: string;
+  prenom?: string;
   matricule?: string;
-  grade?: string;
+  etablissement?: string;
   residence?: string;
-  categorie?: string;
+  nombre_lignes?: string;
 };
 
 function MovementsPage() {
@@ -107,9 +105,6 @@ function MovementsPage() {
     const l = linesOf(id);
     return {
       km: l.reduce((s: number, x: any) => s + Number(x.distance_km || 0), 0),
-      h: l.reduce((s: number, x: any) => s + Number(x.hours || 0), 0),
-      nuits: l.filter((x: any) => x.details?.decouche).length,
-      repas: l.reduce((s: number, x: any) => s + Number(x.details?.repas || 0), 0),
     };
   };
   const headerOf = (r: any): HeaderData => headers[r.id] ?? (r.header as HeaderData) ?? {};
@@ -128,8 +123,8 @@ function MovementsPage() {
         header: {
           nom: me?.full_name ?? "",
           matricule: me?.matricule ?? "",
-          grade: me?.level ?? "",
           mois: new Date(period.start).toLocaleDateString("fr-FR", { month: "long", year: "numeric" }),
+          annee: new Date(period.start).getFullYear().toString(),
         },
       });
       if (error) throw error;
@@ -152,22 +147,24 @@ function MovementsPage() {
       const { error } = await supabase.from("movement_lines").insert({
         record_id: recordId,
         work_date: line.work_date,
-        service_type: line.service_type,
+        service_type: "personnel_roulant",
         train_number: line.train_number || null,
-        departure: line.departure || null,
-        arrival: line.arrival || null,
-        start_time: line.start_time || null,
-        end_time: line.end_time || null,
+        departure: line.departure_code || null,
+        arrival: line.arrival_code || null,
+        start_time: [line.departure_hour, line.departure_minute].filter(Boolean).join(":"),
+        end_time: [line.arrival_hour, line.arrival_minute].filter(Boolean).join(":"),
         distance_km: Number(line.distance_km || 0),
-        hours: Number(line.hours || 0),
-        allowance_code: line.allowance_code || null,
-        notes: line.notes || null,
+        hours: 0,
+        allowance_code: line.observation || null,
+        notes: null,
         details: {
-          engin: line.engin || null,
-          decouche: line.decouche,
-          repas: Number(line.repas || 0),
-          prise_service: line.prise_service || null,
-          fin_service: line.fin_service || null,
+          machine_number: line.machine_number || null,
+          departure_day: line.departure_day || null,
+          departure_hour: line.departure_hour || null,
+          departure_minute: line.departure_minute || null,
+          arrival_day: line.arrival_day || null,
+          arrival_hour: line.arrival_hour || null,
+          arrival_minute: line.arrival_minute || null,
         } as any,
       });
       if (error) throw error;
@@ -243,36 +240,38 @@ function MovementsPage() {
     if (!l.length) return <p className="mt-2 text-sm text-muted-foreground">Aucun mouvement saisi.</p>;
     return (
       <div className="mt-3 overflow-x-auto">
-        <table className="w-full text-sm">
+        <table className="w-full min-w-[920px] border-collapse text-center text-xs">
           <thead className="text-left text-xs uppercase text-muted-foreground">
             <tr>
-              <th className="py-1 pr-3">Date</th>
-              <th className="py-1 pr-3">Nature</th>
-              <th className="py-1 pr-3">Train</th>
-              <th className="py-1 pr-3">Engin</th>
-              <th className="py-1 pr-3">Parcours</th>
-              <th className="py-1 pr-3">Horaires</th>
-              <th className="py-1 pr-3">Km</th>
-              <th className="py-1 pr-3">Heures</th>
-              <th className="py-1 pr-3">Découcher</th>
-              <th className="py-1 pr-3">Repas</th>
-              <th className="py-1 pr-3">Code</th>
+              <th className="py-1 pr-3">N° machine</th>
+              <th className="py-1 pr-3">Désignation train</th>
+              <th className="py-1 pr-3">Départ — code gare</th>
+              <th className="py-1 pr-3">J</th>
+              <th className="py-1 pr-3">H</th>
+              <th className="py-1 pr-3">Mn</th>
+              <th className="py-1 pr-3">Arrivée — code gare</th>
+              <th className="py-1 pr-3">J</th>
+              <th className="py-1 pr-3">H</th>
+              <th className="py-1 pr-3">Mn</th>
+              <th className="py-1 pr-3">Distance si PK</th>
+              <th className="py-1 pr-3">Observations</th>
               {editable && <th />}
             </tr>
           </thead>
           <tbody>
             {l.map((x: any) => (
               <tr key={x.id} className="border-t">
-                <td className="py-1 pr-3">{x.work_date}</td>
-                <td className="py-1 pr-3">{x.service_type}</td>
+                <td className="py-1 pr-3">{x.details?.machine_number ?? "—"}</td>
                 <td className="py-1 pr-3">{x.train_number ?? "—"}</td>
-                <td className="py-1 pr-3">{x.details?.engin ?? "—"}</td>
-                <td className="py-1 pr-3">{[x.departure, x.arrival].filter(Boolean).join(" → ") || "—"}</td>
-                <td className="py-1 pr-3">{[x.start_time, x.end_time].filter(Boolean).join(" - ") || "—"}</td>
+                <td className="py-1 pr-3">{x.departure ?? "—"}</td>
+                <td className="py-1 pr-3">{x.details?.departure_day ?? "—"}</td>
+                <td className="py-1 pr-3">{x.details?.departure_hour ?? "—"}</td>
+                <td className="py-1 pr-3">{x.details?.departure_minute ?? "—"}</td>
+                <td className="py-1 pr-3">{x.arrival ?? "—"}</td>
+                <td className="py-1 pr-3">{x.details?.arrival_day ?? "—"}</td>
+                <td className="py-1 pr-3">{x.details?.arrival_hour ?? "—"}</td>
+                <td className="py-1 pr-3">{x.details?.arrival_minute ?? "—"}</td>
                 <td className="py-1 pr-3">{Number(x.distance_km)}</td>
-                <td className="py-1 pr-3">{Number(x.hours)}</td>
-                <td className="py-1 pr-3">{x.details?.decouche ? "Oui" : "—"}</td>
-                <td className="py-1 pr-3">{Number(x.details?.repas || 0) || "—"}</td>
                 <td className="py-1 pr-3">{x.allowance_code ?? "—"}</td>
                 {editable && (
                   <td className="py-1">
@@ -333,9 +332,7 @@ function MovementsPage() {
                     </Button>
                   </div>
                   <LinesTable id={r.id} editable={false} />
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    Total : {totals(r.id).km} km · {totals(r.id).h} h · {totals(r.id).nuits} découcher(s) · {totals(r.id).repas} repas
-                  </p>
+                  <p className="mt-2 text-xs text-muted-foreground">Distance totale : {totals(r.id).km} km</p>
                   {r.status === "soumis" && (
                     <div className="mt-3 space-y-2">
                       <Textarea
@@ -388,12 +385,13 @@ function MovementsPage() {
                     {r.review_comment && <p className="mt-1 text-xs text-muted-foreground">Retour du chef de traction : {r.review_comment}</p>}
 
                     <div className="mt-4 grid gap-3 rounded-lg border p-3 sm:grid-cols-3">
-                      <div><Label>Dépôt</Label><Input disabled={!editable} value={h.depot ?? ""} onChange={(e) => setHeaderField(r, "depot", e.target.value)} /></div>
-                      <div><Label>Mois / année</Label><Input disabled={!editable} value={h.mois ?? ""} onChange={(e) => setHeaderField(r, "mois", e.target.value)} /></div>
-                      <div><Label>Nom et prénom</Label><Input disabled={!editable} value={h.nom ?? ""} onChange={(e) => setHeaderField(r, "nom", e.target.value)} /></div>
+                      <div><Label>Nom</Label><Input disabled={!editable} value={h.nom ?? ""} onChange={(e) => setHeaderField(r, "nom", e.target.value)} /></div>
+                      <div><Label>Mois</Label><Input disabled={!editable} value={h.mois ?? ""} onChange={(e) => setHeaderField(r, "mois", e.target.value)} /></div>
+                      <div><Label>Année</Label><Input disabled={!editable} value={h.annee ?? ""} onChange={(e) => setHeaderField(r, "annee", e.target.value)} /></div>
+                      <div><Label>Prénom</Label><Input disabled={!editable} value={h.prenom ?? ""} onChange={(e) => setHeaderField(r, "prenom", e.target.value)} /></div>
+                      <div><Label>Établissement</Label><Input disabled={!editable} value={h.etablissement ?? ""} onChange={(e) => setHeaderField(r, "etablissement", e.target.value)} /></div>
+                      <div><Label>Nombre de lignes</Label><Input disabled={!editable} value={h.nombre_lignes ?? ""} onChange={(e) => setHeaderField(r, "nombre_lignes", e.target.value)} /></div>
                       <div><Label>Matricule</Label><Input disabled={!editable} value={h.matricule ?? ""} onChange={(e) => setHeaderField(r, "matricule", e.target.value)} /></div>
-                      <div><Label>Grade / fonction</Label><Input disabled={!editable} value={h.grade ?? ""} onChange={(e) => setHeaderField(r, "grade", e.target.value)} /></div>
-                      <div><Label>Catégorie</Label><Input disabled={!editable} value={h.categorie ?? ""} onChange={(e) => setHeaderField(r, "categorie", e.target.value)} /></div>
                       <div><Label>Résidence</Label><Input disabled={!editable} value={h.residence ?? ""} onChange={(e) => setHeaderField(r, "residence", e.target.value)} /></div>
                       {editable && (
                         <div className="flex items-end">
@@ -405,9 +403,7 @@ function MovementsPage() {
                     </div>
 
                     <LinesTable id={r.id} editable={editable} />
-                    <p className="mt-2 text-xs text-muted-foreground">
-                      Total : {totals(r.id).km} km · {totals(r.id).h} h · {totals(r.id).nuits} découcher(s) · {totals(r.id).repas} repas
-                    </p>
+                    <p className="mt-2 text-xs text-muted-foreground">Distance totale : {totals(r.id).km} km</p>
 
                     {editable && (
                       <div className="mt-3">
@@ -415,27 +411,20 @@ function MovementsPage() {
                           <Plus className="mr-1 h-4 w-4" /> Ajouter un mouvement
                         </Button>
                         {openId === r.id && (
-                          <div className="mt-3 grid gap-3 rounded-lg border p-3 sm:grid-cols-3">
-                            <div><Label>Date</Label><Input type="date" value={line.work_date} onChange={(e) => setLine({ ...line, work_date: e.target.value })} /></div>
-                            <div><Label>Nature du travail</Label><Input value={line.service_type} onChange={(e) => setLine({ ...line, service_type: e.target.value })} placeholder="conduite, manœuvre, réserve…" /></div>
-                            <div><Label>N° de train</Label><Input value={line.train_number} onChange={(e) => setLine({ ...line, train_number: e.target.value })} /></div>
-                            <div><Label>Engin / locomotive</Label><Input value={line.engin} onChange={(e) => setLine({ ...line, engin: e.target.value })} /></div>
-                            <div><Label>Gare de départ</Label><Input value={line.departure} onChange={(e) => setLine({ ...line, departure: e.target.value })} /></div>
-                            <div><Label>Gare d'arrivée</Label><Input value={line.arrival} onChange={(e) => setLine({ ...line, arrival: e.target.value })} /></div>
-                            <div><Label>Heure de départ</Label><Input type="time" value={line.start_time} onChange={(e) => setLine({ ...line, start_time: e.target.value })} /></div>
-                            <div><Label>Heure d'arrivée</Label><Input type="time" value={line.end_time} onChange={(e) => setLine({ ...line, end_time: e.target.value })} /></div>
-                            <div><Label>Prise de service</Label><Input type="time" value={line.prise_service} onChange={(e) => setLine({ ...line, prise_service: e.target.value })} /></div>
-                            <div><Label>Fin de service</Label><Input type="time" value={line.fin_service} onChange={(e) => setLine({ ...line, fin_service: e.target.value })} /></div>
+                          <div className="mt-3 grid gap-3 rounded-lg border p-3 sm:grid-cols-4">
+                            <div><Label>Numéro de la machine</Label><Input value={line.machine_number} onChange={(e) => setLine({ ...line, machine_number: e.target.value })} /></div>
+                            <div><Label>Désignation du train</Label><Input value={line.train_number} onChange={(e) => setLine({ ...line, train_number: e.target.value })} /></div>
+                            <div><Label>Départ — code gare</Label><Input value={line.departure_code} onChange={(e) => setLine({ ...line, departure_code: e.target.value })} /></div>
+                            <div><Label>Départ — jour</Label><Input value={line.departure_day} onChange={(e) => setLine({ ...line, departure_day: e.target.value })} /></div>
+                            <div><Label>Départ — heure</Label><Input value={line.departure_hour} onChange={(e) => setLine({ ...line, departure_hour: e.target.value })} /></div>
+                            <div><Label>Départ — minute</Label><Input value={line.departure_minute} onChange={(e) => setLine({ ...line, departure_minute: e.target.value })} /></div>
+                            <div><Label>Arrivée — code gare</Label><Input value={line.arrival_code} onChange={(e) => setLine({ ...line, arrival_code: e.target.value })} /></div>
+                            <div><Label>Arrivée — jour</Label><Input value={line.arrival_day} onChange={(e) => setLine({ ...line, arrival_day: e.target.value })} /></div>
+                            <div><Label>Arrivée — heure</Label><Input value={line.arrival_hour} onChange={(e) => setLine({ ...line, arrival_hour: e.target.value })} /></div>
+                            <div><Label>Arrivée — minute</Label><Input value={line.arrival_minute} onChange={(e) => setLine({ ...line, arrival_minute: e.target.value })} /></div>
                             <div><Label>Distance (km)</Label><Input type="number" min="0" value={line.distance_km} onChange={(e) => setLine({ ...line, distance_km: e.target.value })} /></div>
-                            <div><Label>Heures</Label><Input type="number" min="0" step="0.5" value={line.hours} onChange={(e) => setLine({ ...line, hours: e.target.value })} /></div>
-                            <div><Label>Nombre de repas</Label><Input type="number" min="0" value={line.repas} onChange={(e) => setLine({ ...line, repas: e.target.value })} /></div>
-                            <div><Label>Code indemnité</Label><Input value={line.allowance_code} onChange={(e) => setLine({ ...line, allowance_code: e.target.value })} /></div>
-                            <div className="flex items-end gap-2">
-                              <input id={`dec-${r.id}`} type="checkbox" className="h-4 w-4" checked={line.decouche} onChange={(e) => setLine({ ...line, decouche: e.target.checked })} />
-                              <Label htmlFor={`dec-${r.id}`}>Découcher</Label>
-                            </div>
-                            <div className="sm:col-span-2"><Label>Observations</Label><Input value={line.notes} onChange={(e) => setLine({ ...line, notes: e.target.value })} /></div>
-                            <div className="sm:col-span-3">
+                            <div><Label>Observations</Label><Input value={line.observation} onChange={(e) => setLine({ ...line, observation: e.target.value })} /></div>
+                            <div className="sm:col-span-4">
                               <Button size="sm" onClick={() => addLine.mutate(r.id)} disabled={addLine.isPending}>Enregistrer la ligne</Button>
                             </div>
                           </div>
@@ -470,112 +459,92 @@ function MovementsPage() {
 
 function PrintSheet({ record, header, lines, totals, agent }: { record: any; header: HeaderData; lines: any[]; totals: any; agent: string }) {
   const visas = record.visas ?? {};
-  const cell = "border border-black px-1 py-0.5 align-top";
+  const cell = "border border-foreground px-1 py-1 align-middle";
   return (
-    <div className="mx-auto w-full p-2 text-[11px]">
-      <div className="flex items-start justify-between border-b-2 border-black pb-2">
-        <div className="font-bold">CAMRAIL</div>
-        <div className="text-center">
-          <div className="text-sm font-bold uppercase">Relevé de mouvement du personnel</div>
-          <div className="text-[10px]">Période du {record.period_start} au {record.period_end}</div>
+    <div className="mx-auto w-full bg-background p-2 text-[10px] text-foreground">
+      <div className="border border-foreground">
+        <div className="grid grid-cols-[120px_1fr_120px] border-b border-foreground px-2 py-1">
+          <div className="text-[8px]">CAMRAIL</div>
+          <div className="text-center text-sm font-semibold uppercase">Relevé des mouvements du personnel roulant</div>
+          <div />
         </div>
-        <div className="text-right text-[10px]">Statut : {STATUS[record.status]?.label ?? record.status}</div>
+        <div className="grid grid-cols-2 gap-x-8 px-2 py-2 leading-7">
+          <div>
+            <p>MAT-MBR-DIF-DT</p>
+            <p><b>NOM</b> : {header.nom || agent}</p>
+            <p><b>PRÉNOM</b> : {header.prenom ?? ""}</p>
+            <p><b>MATRICULE</b> : {header.matricule ?? ""}</p>
+          </div>
+          <div>
+            <p><b>MOIS</b> : {header.mois ?? ""} &nbsp;&nbsp; <b>ANNÉE</b> : {header.annee ?? ""}</p>
+            <p><b>ÉTABLISSEMENT</b> : {header.etablissement ?? ""} &nbsp;&nbsp; <b>NOMBRE DE LIGNES</b> : {header.nombre_lignes ?? ""}</p>
+            <p><b>RÉSIDENCE</b> : {header.residence ?? ""}</p>
+          </div>
+        </div>
       </div>
 
-      <table className="mt-2 w-full border-collapse">
-        <tbody>
-          <tr>
-            <td className={cell}><b>Dépôt :</b> {header.depot ?? ""}</td>
-            <td className={cell}><b>Mois :</b> {header.mois ?? ""}</td>
-            <td className={cell}><b>Nom et prénom :</b> {header.nom || agent}</td>
-          </tr>
-          <tr>
-            <td className={cell}><b>Matricule :</b> {header.matricule ?? ""}</td>
-            <td className={cell}><b>Grade / fonction :</b> {header.grade ?? ""}</td>
-            <td className={cell}><b>Catégorie :</b> {header.categorie ?? ""} — <b>Résidence :</b> {header.residence ?? ""}</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <table className="mt-2 w-full border-collapse">
+      <table className="w-full border-collapse text-center">
         <thead>
-          <tr className="bg-neutral-200">
-            <th className={cell}>Date</th>
-            <th className={cell}>Nature</th>
-            <th className={cell}>Train</th>
-            <th className={cell}>Engin</th>
-            <th className={cell}>Départ</th>
-            <th className={cell}>H. dép.</th>
-            <th className={cell}>Arrivée</th>
-            <th className={cell}>H. arr.</th>
-            <th className={cell}>Prise serv.</th>
-            <th className={cell}>Fin serv.</th>
-            <th className={cell}>Km</th>
-            <th className={cell}>Heures</th>
-            <th className={cell}>Déc.</th>
-            <th className={cell}>Repas</th>
-            <th className={cell}>Code</th>
-            <th className={cell}>Observations</th>
+          <tr>
+            <th rowSpan={2} className={cell}>NUMÉRO DE LA<br />MACHINE</th>
+            <th rowSpan={2} className={cell}>DÉSIGNATION<br />DE TRAIN</th>
+            <th colSpan={4} className={cell}>DÉPART</th>
+            <th colSpan={4} className={cell}>ARRIVÉE</th>
+            <th rowSpan={2} className={cell}>DISTANCE<br />SI PK</th>
+            <th rowSpan={2} className={cell}>OBSERVATIONS</th>
+          </tr>
+          <tr>
+            <th className={cell}>CODE<br />GARE</th><th className={cell}>J</th><th className={cell}>H</th><th className={cell}>Mn</th>
+            <th className={cell}>CODE<br />GARE</th><th className={cell}>J</th><th className={cell}>H</th><th className={cell}>Mn</th>
           </tr>
         </thead>
         <tbody>
           {lines.map((x: any) => (
             <tr key={x.id}>
-              <td className={cell}>{x.work_date}</td>
-              <td className={cell}>{x.service_type}</td>
+              <td className={cell}>{x.details?.machine_number ?? ""}</td>
               <td className={cell}>{x.train_number ?? ""}</td>
-              <td className={cell}>{x.details?.engin ?? ""}</td>
               <td className={cell}>{x.departure ?? ""}</td>
-              <td className={cell}>{x.start_time ?? ""}</td>
+              <td className={cell}>{x.details?.departure_day ?? ""}</td>
+              <td className={cell}>{x.details?.departure_hour ?? ""}</td>
+              <td className={cell}>{x.details?.departure_minute ?? ""}</td>
               <td className={cell}>{x.arrival ?? ""}</td>
-              <td className={cell}>{x.end_time ?? ""}</td>
-              <td className={cell}>{x.details?.prise_service ?? ""}</td>
-              <td className={cell}>{x.details?.fin_service ?? ""}</td>
-              <td className={cell}>{Number(x.distance_km)}</td>
-              <td className={cell}>{Number(x.hours)}</td>
-              <td className={cell}>{x.details?.decouche ? "X" : ""}</td>
-              <td className={cell}>{Number(x.details?.repas || 0) || ""}</td>
+              <td className={cell}>{x.details?.arrival_day ?? ""}</td>
+              <td className={cell}>{x.details?.arrival_hour ?? ""}</td>
+              <td className={cell}>{x.details?.arrival_minute ?? ""}</td>
+              <td className={cell}>{Number(x.distance_km) || ""}</td>
               <td className={cell}>{x.allowance_code ?? ""}</td>
-              <td className={cell}>{x.notes ?? ""}</td>
             </tr>
           ))}
-          {Array.from({ length: Math.max(0, 12 - lines.length) }).map((_, i) => (
+          {Array.from({ length: Math.max(0, 24 - lines.length) }).map((_, i) => (
             <tr key={`e${i}`}>
-              {Array.from({ length: 16 }).map((__, j) => <td key={j} className={cell}>&nbsp;</td>)}
+              {Array.from({ length: 12 }).map((__, j) => <td key={j} className={cell}>&nbsp;</td>)}
             </tr>
           ))}
-          <tr className="font-bold">
-            <td className={cell} colSpan={10}>TOTAUX</td>
-            <td className={cell}>{totals.km}</td>
-            <td className={cell}>{totals.h}</td>
-            <td className={cell}>{totals.nuits}</td>
-            <td className={cell}>{totals.repas}</td>
-            <td className={cell} colSpan={2}></td>
-          </tr>
         </tbody>
       </table>
 
-      <table className="mt-3 w-full border-collapse">
+      <table className="w-full border-collapse text-[9px]">
         <tbody>
           <tr>
-            <td className={cell} style={{ height: 70, width: "33%" }}>
-              <b>Visa de l'agent</b><br />
+            <td className={`${cell} h-16 w-1/5`}>
+              <b>VISA DE L'AGENT</b><br />
               {visas.agent?.nom ?? header.nom ?? ""}<br />
               {visas.agent?.date ? `Le ${visas.agent.date}` : ""}
             </td>
-            <td className={cell} style={{ height: 70, width: "34%" }}>
-              <b>Visa du chef de traction</b><br />
+            <td className={`${cell} h-16 w-1/5`}>
+              <b>VISA DU CHEF DE GROUPE</b><br />
               {visas.ctra?.nom ?? ""}<br />
-              {visas.ctra?.date ? `Le ${visas.ctra.date}` : ""}<br />
-              {visas.ctra?.observation ?? record.review_comment ?? ""}
+              {visas.ctra?.date ? `Le ${visas.ctra.date}` : ""}
             </td>
-            <td className={cell} style={{ height: 70, width: "33%" }}>
-              <b>Visa du chef de dépôt / paye</b><br />
-              {record.payroll_exported_at ? `Inscrit en paye le ${new Date(record.payroll_exported_at).toLocaleDateString("fr-FR")}` : ""}
-            </td>
+            <td className={`${cell} h-16 w-1/5`}><b>VISA DU CHEF D'ÉTABLISSEMENT</b></td>
+            <td className={`${cell} h-16 w-2/5`}><b>DRH</b></td>
           </tr>
         </tbody>
       </table>
+      <div className="mt-2 grid grid-cols-5 text-[9px]">
+        <span>1 = LIGNE (DT-DIF)</span><span>2 = LIGNE (MBR)</span><span>3 = MANŒUVRE</span><span>4 = RÉSERVE</span><span>5 = VOITURE</span>
+      </div>
+      <div className="mt-1 text-right text-[8px]">Distance totale saisie : {totals.km} km</div>
     </div>
   );
 }
