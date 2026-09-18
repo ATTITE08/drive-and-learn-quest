@@ -332,9 +332,7 @@ function MovementsPage() {
                     </Button>
                   </div>
                   <LinesTable id={r.id} editable={false} />
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    Total : {totals(r.id).km} km · {totals(r.id).h} h · {totals(r.id).nuits} découcher(s) · {totals(r.id).repas} repas
-                  </p>
+                  <p className="mt-2 text-xs text-muted-foreground">Distance totale : {totals(r.id).km} km</p>
                   {r.status === "soumis" && (
                     <div className="mt-3 space-y-2">
                       <Textarea
@@ -387,12 +385,13 @@ function MovementsPage() {
                     {r.review_comment && <p className="mt-1 text-xs text-muted-foreground">Retour du chef de traction : {r.review_comment}</p>}
 
                     <div className="mt-4 grid gap-3 rounded-lg border p-3 sm:grid-cols-3">
-                      <div><Label>Dépôt</Label><Input disabled={!editable} value={h.depot ?? ""} onChange={(e) => setHeaderField(r, "depot", e.target.value)} /></div>
-                      <div><Label>Mois / année</Label><Input disabled={!editable} value={h.mois ?? ""} onChange={(e) => setHeaderField(r, "mois", e.target.value)} /></div>
-                      <div><Label>Nom et prénom</Label><Input disabled={!editable} value={h.nom ?? ""} onChange={(e) => setHeaderField(r, "nom", e.target.value)} /></div>
+                      <div><Label>Nom</Label><Input disabled={!editable} value={h.nom ?? ""} onChange={(e) => setHeaderField(r, "nom", e.target.value)} /></div>
+                      <div><Label>Mois</Label><Input disabled={!editable} value={h.mois ?? ""} onChange={(e) => setHeaderField(r, "mois", e.target.value)} /></div>
+                      <div><Label>Année</Label><Input disabled={!editable} value={h.annee ?? ""} onChange={(e) => setHeaderField(r, "annee", e.target.value)} /></div>
+                      <div><Label>Prénom</Label><Input disabled={!editable} value={h.prenom ?? ""} onChange={(e) => setHeaderField(r, "prenom", e.target.value)} /></div>
+                      <div><Label>Établissement</Label><Input disabled={!editable} value={h.etablissement ?? ""} onChange={(e) => setHeaderField(r, "etablissement", e.target.value)} /></div>
+                      <div><Label>Nombre de lignes</Label><Input disabled={!editable} value={h.nombre_lignes ?? ""} onChange={(e) => setHeaderField(r, "nombre_lignes", e.target.value)} /></div>
                       <div><Label>Matricule</Label><Input disabled={!editable} value={h.matricule ?? ""} onChange={(e) => setHeaderField(r, "matricule", e.target.value)} /></div>
-                      <div><Label>Grade / fonction</Label><Input disabled={!editable} value={h.grade ?? ""} onChange={(e) => setHeaderField(r, "grade", e.target.value)} /></div>
-                      <div><Label>Catégorie</Label><Input disabled={!editable} value={h.categorie ?? ""} onChange={(e) => setHeaderField(r, "categorie", e.target.value)} /></div>
                       <div><Label>Résidence</Label><Input disabled={!editable} value={h.residence ?? ""} onChange={(e) => setHeaderField(r, "residence", e.target.value)} /></div>
                       {editable && (
                         <div className="flex items-end">
@@ -404,9 +403,7 @@ function MovementsPage() {
                     </div>
 
                     <LinesTable id={r.id} editable={editable} />
-                    <p className="mt-2 text-xs text-muted-foreground">
-                      Total : {totals(r.id).km} km · {totals(r.id).h} h · {totals(r.id).nuits} découcher(s) · {totals(r.id).repas} repas
-                    </p>
+                    <p className="mt-2 text-xs text-muted-foreground">Distance totale : {totals(r.id).km} km</p>
 
                     {editable && (
                       <div className="mt-3">
@@ -414,27 +411,20 @@ function MovementsPage() {
                           <Plus className="mr-1 h-4 w-4" /> Ajouter un mouvement
                         </Button>
                         {openId === r.id && (
-                          <div className="mt-3 grid gap-3 rounded-lg border p-3 sm:grid-cols-3">
-                            <div><Label>Date</Label><Input type="date" value={line.work_date} onChange={(e) => setLine({ ...line, work_date: e.target.value })} /></div>
-                            <div><Label>Nature du travail</Label><Input value={line.service_type} onChange={(e) => setLine({ ...line, service_type: e.target.value })} placeholder="conduite, manœuvre, réserve…" /></div>
-                            <div><Label>N° de train</Label><Input value={line.train_number} onChange={(e) => setLine({ ...line, train_number: e.target.value })} /></div>
-                            <div><Label>Engin / locomotive</Label><Input value={line.engin} onChange={(e) => setLine({ ...line, engin: e.target.value })} /></div>
-                            <div><Label>Gare de départ</Label><Input value={line.departure} onChange={(e) => setLine({ ...line, departure: e.target.value })} /></div>
-                            <div><Label>Gare d'arrivée</Label><Input value={line.arrival} onChange={(e) => setLine({ ...line, arrival: e.target.value })} /></div>
-                            <div><Label>Heure de départ</Label><Input type="time" value={line.start_time} onChange={(e) => setLine({ ...line, start_time: e.target.value })} /></div>
-                            <div><Label>Heure d'arrivée</Label><Input type="time" value={line.end_time} onChange={(e) => setLine({ ...line, end_time: e.target.value })} /></div>
-                            <div><Label>Prise de service</Label><Input type="time" value={line.prise_service} onChange={(e) => setLine({ ...line, prise_service: e.target.value })} /></div>
-                            <div><Label>Fin de service</Label><Input type="time" value={line.fin_service} onChange={(e) => setLine({ ...line, fin_service: e.target.value })} /></div>
+                          <div className="mt-3 grid gap-3 rounded-lg border p-3 sm:grid-cols-4">
+                            <div><Label>Numéro de la machine</Label><Input value={line.machine_number} onChange={(e) => setLine({ ...line, machine_number: e.target.value })} /></div>
+                            <div><Label>Désignation du train</Label><Input value={line.train_number} onChange={(e) => setLine({ ...line, train_number: e.target.value })} /></div>
+                            <div><Label>Départ — code gare</Label><Input value={line.departure_code} onChange={(e) => setLine({ ...line, departure_code: e.target.value })} /></div>
+                            <div><Label>Départ — jour</Label><Input value={line.departure_day} onChange={(e) => setLine({ ...line, departure_day: e.target.value })} /></div>
+                            <div><Label>Départ — heure</Label><Input value={line.departure_hour} onChange={(e) => setLine({ ...line, departure_hour: e.target.value })} /></div>
+                            <div><Label>Départ — minute</Label><Input value={line.departure_minute} onChange={(e) => setLine({ ...line, departure_minute: e.target.value })} /></div>
+                            <div><Label>Arrivée — code gare</Label><Input value={line.arrival_code} onChange={(e) => setLine({ ...line, arrival_code: e.target.value })} /></div>
+                            <div><Label>Arrivée — jour</Label><Input value={line.arrival_day} onChange={(e) => setLine({ ...line, arrival_day: e.target.value })} /></div>
+                            <div><Label>Arrivée — heure</Label><Input value={line.arrival_hour} onChange={(e) => setLine({ ...line, arrival_hour: e.target.value })} /></div>
+                            <div><Label>Arrivée — minute</Label><Input value={line.arrival_minute} onChange={(e) => setLine({ ...line, arrival_minute: e.target.value })} /></div>
                             <div><Label>Distance (km)</Label><Input type="number" min="0" value={line.distance_km} onChange={(e) => setLine({ ...line, distance_km: e.target.value })} /></div>
-                            <div><Label>Heures</Label><Input type="number" min="0" step="0.5" value={line.hours} onChange={(e) => setLine({ ...line, hours: e.target.value })} /></div>
-                            <div><Label>Nombre de repas</Label><Input type="number" min="0" value={line.repas} onChange={(e) => setLine({ ...line, repas: e.target.value })} /></div>
-                            <div><Label>Code indemnité</Label><Input value={line.allowance_code} onChange={(e) => setLine({ ...line, allowance_code: e.target.value })} /></div>
-                            <div className="flex items-end gap-2">
-                              <input id={`dec-${r.id}`} type="checkbox" className="h-4 w-4" checked={line.decouche} onChange={(e) => setLine({ ...line, decouche: e.target.checked })} />
-                              <Label htmlFor={`dec-${r.id}`}>Découcher</Label>
-                            </div>
-                            <div className="sm:col-span-2"><Label>Observations</Label><Input value={line.notes} onChange={(e) => setLine({ ...line, notes: e.target.value })} /></div>
-                            <div className="sm:col-span-3">
+                            <div><Label>Observations</Label><Input value={line.observation} onChange={(e) => setLine({ ...line, observation: e.target.value })} /></div>
+                            <div className="sm:col-span-4">
                               <Button size="sm" onClick={() => addLine.mutate(r.id)} disabled={addLine.isPending}>Enregistrer la ligne</Button>
                             </div>
                           </div>
