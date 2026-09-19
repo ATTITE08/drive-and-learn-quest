@@ -459,7 +459,7 @@ function MovementsPage() {
 
 function PrintSheet({ record, header, lines, totals, agent }: { record: any; header: HeaderData; lines: any[]; totals: any; agent: string }) {
   const visas = record.visas ?? {};
-  const cell = "border border-foreground px-1 py-1 align-middle";
+  const cell = "border border-foreground px-1 py-0.5 align-middle";
   return (
     <div className="mx-auto w-full bg-background p-2 text-[10px] text-foreground">
       <div className="border border-foreground">
@@ -541,10 +541,14 @@ function PrintSheet({ record, header, lines, totals, agent }: { record: any; hea
           </tr>
         </tbody>
       </table>
-      <div className="mt-2 grid grid-cols-5 text-[9px]">
-        <span>1 = LIGNE (DT-DIF)</span><span>2 = LIGNE (MBR)</span><span>3 = MANŒUVRE</span><span>4 = RÉSERVE</span><span>5 = VOITURE</span>
+      <div className="mt-1 border border-foreground px-2 py-1 text-[9px]">
+        <div className="grid grid-cols-5">
+          <span>1 = LIGNE (DT-DIF)</span><span>2 = LIGNE (MBR)</span><span>3 = MANŒUVRE</span><span>4 = RÉSERVE</span><span>5 = VOITURE</span>
+        </div>
+        <div className="grid grid-cols-5">
+          <span>6 = GARDIENNAGE</span><span>7 = SERVICE INTERIEUR</span>
+        </div>
       </div>
-      <div className="mt-1 text-right text-[8px]">Distance totale saisie : {totals.km} km</div>
     </div>
   );
 }
