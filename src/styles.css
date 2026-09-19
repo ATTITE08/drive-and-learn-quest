@@ -111,7 +111,7 @@
   .no-print, header, footer, nav { display: none !important; }
   main { padding: 0 !important; max-width: none !important; }
   .print-sheet { display: block !important; }
-  .print-sheet table { font-size: 10px; }
-  @page { size: A4 landscape; margin: 10mm; }
+  .print-sheet table { font-size: 9px; }
+  @page { size: A4 portrait; margin: 8mm; }
 }
 .print-sheet { display: none; }
