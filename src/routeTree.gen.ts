@@ -13,7 +13,6 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AuthenticatedReviewRouteImport } from './routes/_authenticated/review'
 import { Route as AuthenticatedResultsRouteImport } from './routes/_authenticated/results'
 import { Route as AuthenticatedQuizzesRouteImport } from './routes/_authenticated/quizzes'
 import { Route as AuthenticatedPriseServiceRouteImport } from './routes/_authenticated/prise-service'
@@ -45,11 +44,6 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedReviewRoute = AuthenticatedReviewRouteImport.update({
-  id: '/review',
-  path: '/review',
-  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedResultsRoute = AuthenticatedResultsRouteImport.update({
   id: '/results',
@@ -129,7 +123,6 @@ export interface FileRoutesByFullPath {
   '/prise-service': typeof AuthenticatedPriseServiceRoute
   '/quizzes': typeof AuthenticatedQuizzesRouteWithChildren
   '/results': typeof AuthenticatedResultsRoute
-  '/review': typeof AuthenticatedReviewRoute
   '/quiz/$id': typeof AuthenticatedQuizIdRoute
   '/quizzes/$id/versions': typeof AuthenticatedQuizzesIdVersionsRoute
 }
@@ -147,7 +140,6 @@ export interface FileRoutesByTo {
   '/prise-service': typeof AuthenticatedPriseServiceRoute
   '/quizzes': typeof AuthenticatedQuizzesRouteWithChildren
   '/results': typeof AuthenticatedResultsRoute
-  '/review': typeof AuthenticatedReviewRoute
   '/quiz/$id': typeof AuthenticatedQuizIdRoute
   '/quizzes/$id/versions': typeof AuthenticatedQuizzesIdVersionsRoute
 }
@@ -167,7 +159,6 @@ export interface FileRoutesById {
   '/_authenticated/prise-service': typeof AuthenticatedPriseServiceRoute
   '/_authenticated/quizzes': typeof AuthenticatedQuizzesRouteWithChildren
   '/_authenticated/results': typeof AuthenticatedResultsRoute
-  '/_authenticated/review': typeof AuthenticatedReviewRoute
   '/_authenticated/quiz/$id': typeof AuthenticatedQuizIdRoute
   '/_authenticated/quizzes/$id/versions': typeof AuthenticatedQuizzesIdVersionsRoute
 }
@@ -187,7 +178,6 @@ export interface FileRouteTypes {
     | '/prise-service'
     | '/quizzes'
     | '/results'
-    | '/review'
     | '/quiz/$id'
     | '/quizzes/$id/versions'
   fileRoutesByTo: FileRoutesByTo
@@ -205,7 +195,6 @@ export interface FileRouteTypes {
     | '/prise-service'
     | '/quizzes'
     | '/results'
-    | '/review'
     | '/quiz/$id'
     | '/quizzes/$id/versions'
   id:
@@ -224,7 +213,6 @@ export interface FileRouteTypes {
     | '/_authenticated/prise-service'
     | '/_authenticated/quizzes'
     | '/_authenticated/results'
-    | '/_authenticated/review'
     | '/_authenticated/quiz/$id'
     | '/_authenticated/quizzes/$id/versions'
   fileRoutesById: FileRoutesById
@@ -265,13 +253,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/review': {
-      id: '/_authenticated/review'
-      path: '/review'
-      fullPath: '/review'
-      preLoaderRoute: typeof AuthenticatedReviewRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/results': {
       id: '/_authenticated/results'
@@ -382,7 +363,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPriseServiceRoute: typeof AuthenticatedPriseServiceRoute
   AuthenticatedQuizzesRoute: typeof AuthenticatedQuizzesRouteWithChildren
   AuthenticatedResultsRoute: typeof AuthenticatedResultsRoute
-  AuthenticatedReviewRoute: typeof AuthenticatedReviewRoute
   AuthenticatedQuizIdRoute: typeof AuthenticatedQuizIdRoute
 }
 
@@ -397,7 +377,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPriseServiceRoute: AuthenticatedPriseServiceRoute,
   AuthenticatedQuizzesRoute: AuthenticatedQuizzesRouteWithChildren,
   AuthenticatedResultsRoute: AuthenticatedResultsRoute,
-  AuthenticatedReviewRoute: AuthenticatedReviewRoute,
   AuthenticatedQuizIdRoute: AuthenticatedQuizIdRoute,
 }
 

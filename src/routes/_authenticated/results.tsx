@@ -1,18 +1,23 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { Fragment, useState } from "react";
+import { ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/useUserRole";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { levelLabel, subjectLabel } from "@/lib/constants";
 import { cn } from "@/lib/utils";
+import { AttemptDetail } from "@/components/AttemptDetail";
 
 export const Route = createFileRoute("/_authenticated/results")({
+  head: () => ({ meta: [{ title: "Résultats — RailFormation" }] }),
   component: Results,
 });
 
 function Results() {
   const { data: roleData } = useUserRole();
+  const [open, setOpen] = useState<string | null>(null);
   const isStaff = roleData?.role === "admin" || roleData?.role === "formateur";
 
   const { data, isLoading } = useQuery({
@@ -66,10 +71,17 @@ function Results() {
               <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">Aucun résultat pour le moment.</TableCell></TableRow>
             ) : data.map((r: any) => {
               const pct = r.total ? Math.round((r.score / r.total) * 100) : 0;
+              const isOpen = open === r.id;
               return (
-                <TableRow key={r.id}>
+                <Fragment key={r.id}>
+                <TableRow className="cursor-pointer" onClick={() => setOpen(isOpen ? null : r.id)}>
                   {isStaff && <TableCell><div className="font-medium">{r.profiles?.full_name ?? "—"}</div><div className="text-xs text-muted-foreground">{r.profiles?.email}</div></TableCell>}
-                  <TableCell className="font-medium">{r.quizzes?.title}</TableCell>
+                  <TableCell className="font-medium">
+                    <span className="inline-flex items-center gap-1">
+                      <ChevronDown className={cn("h-4 w-4 transition-transform", isOpen && "rotate-180")} />
+                      {r.quizzes?.title}
+                    </span>
+                  </TableCell>
                   <TableCell>{subjectLabel(r.quizzes?.subject)}</TableCell>
                   <TableCell>{levelLabel(r.quizzes?.level)}</TableCell>
                   <TableCell className="text-right">
@@ -80,6 +92,14 @@ function Results() {
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">{new Date(r.finished_at).toLocaleDateString("fr-FR")}</TableCell>
                 </TableRow>
+                {isOpen && (
+                  <TableRow>
+                    <TableCell colSpan={isStaff ? 6 : 5} className="bg-muted/20">
+                      <AttemptDetail attemptId={r.id} />
+                    </TableCell>
+                  </TableRow>
+                )}
+                </Fragment>
               );
             })}
           </TableBody>

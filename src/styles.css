@@ -115,3 +115,7 @@
   @page { size: A4 portrait; margin: 8mm; }
 }
 .print-sheet { display: none; }
+@media print {
+  input, textarea, select, button[role="combobox"] { border: 1px solid #000 !important; box-shadow: none !important; }
+  .rounded-xl, [class*="shadow"] { box-shadow: none !important; }
+}
