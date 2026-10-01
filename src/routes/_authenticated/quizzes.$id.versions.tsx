@@ -14,7 +14,7 @@ export const Route = createFileRoute("/_authenticated/quizzes/$id/versions")({
     const router = useRouter();
     return (
       <Card className="p-6 space-y-3">
-        <p className="text-sm text-destructive">{error.message}</p>
+        <p className="text-sm text-destructive">{error instanceof Error ? error.message : String(error)}</p>
         <Button size="sm" onClick={() => { reset(); router.invalidate(); }}>Réessayer</Button>
       </Card>
     );
