@@ -37,9 +37,12 @@ function AdminPage() {
   }
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-display text-3xl font-bold">Administration</h1>
-        <p className="text-muted-foreground">Gérez les documents pédagogiques, générez les questionnaires et les rôles.</p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="font-display text-3xl font-bold">Administration</h1>
+          <p className="text-muted-foreground">Documents, création de questionnaires, utilisateurs et rôles — tout au même endroit.</p>
+        </div>
+        <Button asChild><Link to="/builder"><Pencil className="h-4 w-4 mr-1" /> Créer un quiz</Link></Button>
       </div>
       <Tabs defaultValue="documents">
         <TabsList>

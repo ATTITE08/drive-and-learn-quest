@@ -28,10 +28,7 @@ export function AppShell({ children, role }: { children: ReactNode; role: AppRol
     { to: "/prise-service", label: "Prise de service" },
   ];
 
-    if (role === "admin" || role === "formateur") {
-      nav.push({ to: "/review", label: "Réponses" });
-      nav.push({ to: "/builder", label: "Créer un quiz" });
-    }
+    if (role === "formateur") nav.push({ to: "/builder", label: "Créer un quiz" });
     if (role === "admin") nav.push({ to: "/admin", label: "Administration" });
 
   const signOut = async () => {
