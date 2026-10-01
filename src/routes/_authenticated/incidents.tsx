@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { AlertTriangle, Send, CheckCircle2, ArrowUpRight, ClipboardList } from "lucide-react";
+import { AlertTriangle, Send, CheckCircle2, ArrowUpRight, ClipboardList, Printer } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/incidents")({
   component: IncidentsPage,
@@ -345,7 +345,10 @@ function IncidentsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="relative">
+        <Button type="button" variant="outline" size="sm" className="no-print float-right" onClick={() => window.print()}>
+          <Printer className="h-4 w-4 mr-1" /> Imprimer / PDF
+        </Button>
         <h1 className="font-display text-2xl font-bold">Rapport d'incident</h1>
         <p className="text-muted-foreground">
           Direction transport — gestion personnel conduite. L'agent établit le rapport du conducteur, le chef de traction rédige l'analyse, puis le rapport remonte jusqu'au chef du département conduite.

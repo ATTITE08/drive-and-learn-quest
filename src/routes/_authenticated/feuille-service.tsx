@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Plus, Trash2, ClipboardList, CheckCircle2 } from "lucide-react";
+import { Plus, Trash2, ClipboardList, CheckCircle2, Printer } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/feuille-service")({
   component: ServiceSheetPage,
@@ -172,7 +172,10 @@ function ServiceSheetPage() {
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="relative">
+        <Button type="button" variant="outline" size="sm" className="no-print float-right" onClick={() => window.print()}>
+          <Printer className="h-4 w-4 mr-1" /> Imprimer / PDF
+        </Button>
         <h1 className="font-display text-2xl font-bold">Feuille de service conducteurs</h1>
         <p className="text-muted-foreground">
           Direction transport — établie par le chef commande conducteur : équipes de conduite, graphique horaire, locomotive, repos, absences et détachés, par dépôt et par journée.
