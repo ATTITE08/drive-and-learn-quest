@@ -9,31 +9,27 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
-import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
-import { Route as AuthenticatedBuilderRouteImport } from './routes/_authenticated/builder'
-import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
-import { Route as AuthenticatedEquipeRouteImport } from './routes/_authenticated/equipe'
-import { Route as AuthenticatedFeuilleServiceRouteImport } from './routes/_authenticated/feuille-service'
-import { Route as AuthenticatedIncidentsRouteImport } from './routes/_authenticated/incidents'
-import { Route as AuthenticatedMouvementsRouteImport } from './routes/_authenticated/mouvements'
-import { Route as AuthenticatedPriseServiceRouteImport } from './routes/_authenticated/prise-service'
-import { Route as AuthenticatedQuizzesRouteImport } from './routes/_authenticated/quizzes'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedResultsRouteImport } from './routes/_authenticated/results'
-import { Route as AuthenticatedQuizIdRouteImport } from './routes/_authenticated/quiz.$id'
+import { Route as AuthenticatedQuizzesRouteImport } from './routes/_authenticated/quizzes'
+import { Route as AuthenticatedPriseServiceRouteImport } from './routes/_authenticated/prise-service'
+import { Route as AuthenticatedMouvementsRouteImport } from './routes/_authenticated/mouvements'
+import { Route as AuthenticatedIncidentsRouteImport } from './routes/_authenticated/incidents'
+import { Route as AuthenticatedFeuilleServiceRouteImport } from './routes/_authenticated/feuille-service'
+import { Route as AuthenticatedEquipeRouteImport } from './routes/_authenticated/equipe'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedBuilderRouteImport } from './routes/_authenticated/builder'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as OauthGoogleReturnRouteImport } from './routes/oauth/google/return'
+import { Route as AuthenticatedQuizIdRouteImport } from './routes/_authenticated/quiz.$id'
 import { Route as AuthenticatedQuizzesIdVersionsRouteImport } from './routes/_authenticated/quizzes.$id.versions'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
-  id: '/_authenticated',
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -41,45 +37,23 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedResultsRoute = AuthenticatedResultsRouteImport.update({
+  id: '/results',
+  path: '/results',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedBuilderRoute = AuthenticatedBuilderRouteImport.update({
-  id: '/builder',
-  path: '/builder',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedEquipeRoute = AuthenticatedEquipeRouteImport.update({
-  id: '/equipe',
-  path: '/equipe',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedFeuilleServiceRoute =
-  AuthenticatedFeuilleServiceRouteImport.update({
-    id: '/feuille-service',
-    path: '/feuille-service',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedIncidentsRoute = AuthenticatedIncidentsRouteImport.update({
-  id: '/incidents',
-  path: '/incidents',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedMouvementsRoute = AuthenticatedMouvementsRouteImport.update({
-  id: '/mouvements',
-  path: '/mouvements',
+const AuthenticatedQuizzesRoute = AuthenticatedQuizzesRouteImport.update({
+  id: '/quizzes',
+  path: '/quizzes',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedPriseServiceRoute =
@@ -88,25 +62,51 @@ const AuthenticatedPriseServiceRoute =
     path: '/prise-service',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedQuizzesRoute = AuthenticatedQuizzesRouteImport.update({
-  id: '/quizzes',
-  path: '/quizzes',
+const AuthenticatedMouvementsRoute = AuthenticatedMouvementsRouteImport.update({
+  id: '/mouvements',
+  path: '/mouvements',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedResultsRoute = AuthenticatedResultsRouteImport.update({
-  id: '/results',
-  path: '/results',
+const AuthenticatedIncidentsRoute = AuthenticatedIncidentsRouteImport.update({
+  id: '/incidents',
+  path: '/incidents',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedQuizIdRoute = AuthenticatedQuizIdRouteImport.update({
-  id: '/quiz/$id',
-  path: '/quiz/$id',
+const AuthenticatedFeuilleServiceRoute =
+  AuthenticatedFeuilleServiceRouteImport.update({
+    id: '/feuille-service',
+    path: '/feuille-service',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedEquipeRoute = AuthenticatedEquipeRouteImport.update({
+  id: '/equipe',
+  path: '/equipe',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedBuilderRoute = AuthenticatedBuilderRouteImport.update({
+  id: '/builder',
+  path: '/builder',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const OauthGoogleReturnRoute = OauthGoogleReturnRouteImport.update({
   id: '/oauth/google/return',
   path: '/oauth/google/return',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedQuizIdRoute = AuthenticatedQuizIdRouteImport.update({
+  id: '/quiz/$id',
+  path: '/quiz/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedQuizzesIdVersionsRoute =
   AuthenticatedQuizzesIdVersionsRouteImport.update({
@@ -239,18 +239,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated': {
-      id: '/_authenticated'
-      path: ''
-      fullPath: '/'
-      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -260,67 +253,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/admin': {
-      id: '/_authenticated/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AuthenticatedAdminRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/builder': {
-      id: '/_authenticated/builder'
-      path: '/builder'
-      fullPath: '/builder'
-      preLoaderRoute: typeof AuthenticatedBuilderRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/dashboard': {
-      id: '/_authenticated/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/equipe': {
-      id: '/_authenticated/equipe'
-      path: '/equipe'
-      fullPath: '/equipe'
-      preLoaderRoute: typeof AuthenticatedEquipeRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/feuille-service': {
-      id: '/_authenticated/feuille-service'
-      path: '/feuille-service'
-      fullPath: '/feuille-service'
-      preLoaderRoute: typeof AuthenticatedFeuilleServiceRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/incidents': {
-      id: '/_authenticated/incidents'
-      path: '/incidents'
-      fullPath: '/incidents'
-      preLoaderRoute: typeof AuthenticatedIncidentsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/mouvements': {
-      id: '/_authenticated/mouvements'
-      path: '/mouvements'
-      fullPath: '/mouvements'
-      preLoaderRoute: typeof AuthenticatedMouvementsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/prise-service': {
-      id: '/_authenticated/prise-service'
-      path: '/prise-service'
-      fullPath: '/prise-service'
-      preLoaderRoute: typeof AuthenticatedPriseServiceRouteImport
+    '/_authenticated/results': {
+      id: '/_authenticated/results'
+      path: '/results'
+      fullPath: '/results'
+      preLoaderRoute: typeof AuthenticatedResultsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/quizzes': {
@@ -330,18 +281,60 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedQuizzesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/results': {
-      id: '/_authenticated/results'
-      path: '/results'
-      fullPath: '/results'
-      preLoaderRoute: typeof AuthenticatedResultsRouteImport
+    '/_authenticated/prise-service': {
+      id: '/_authenticated/prise-service'
+      path: '/prise-service'
+      fullPath: '/prise-service'
+      preLoaderRoute: typeof AuthenticatedPriseServiceRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/quiz/$id': {
-      id: '/_authenticated/quiz/$id'
-      path: '/quiz/$id'
-      fullPath: '/quiz/$id'
-      preLoaderRoute: typeof AuthenticatedQuizIdRouteImport
+    '/_authenticated/mouvements': {
+      id: '/_authenticated/mouvements'
+      path: '/mouvements'
+      fullPath: '/mouvements'
+      preLoaderRoute: typeof AuthenticatedMouvementsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/incidents': {
+      id: '/_authenticated/incidents'
+      path: '/incidents'
+      fullPath: '/incidents'
+      preLoaderRoute: typeof AuthenticatedIncidentsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/feuille-service': {
+      id: '/_authenticated/feuille-service'
+      path: '/feuille-service'
+      fullPath: '/feuille-service'
+      preLoaderRoute: typeof AuthenticatedFeuilleServiceRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/equipe': {
+      id: '/_authenticated/equipe'
+      path: '/equipe'
+      fullPath: '/equipe'
+      preLoaderRoute: typeof AuthenticatedEquipeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/builder': {
+      id: '/_authenticated/builder'
+      path: '/builder'
+      fullPath: '/builder'
+      preLoaderRoute: typeof AuthenticatedBuilderRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/oauth/google/return': {
@@ -350,6 +343,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/oauth/google/return'
       preLoaderRoute: typeof OauthGoogleReturnRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/quiz/$id': {
+      id: '/_authenticated/quiz/$id'
+      path: '/quiz/$id'
+      fullPath: '/quiz/$id'
+      preLoaderRoute: typeof AuthenticatedQuizIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/quizzes/$id/versions': {
       id: '/_authenticated/quizzes/$id/versions'
