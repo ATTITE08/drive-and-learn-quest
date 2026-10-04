@@ -62,6 +62,36 @@ export type Database = {
           },
         ]
       }
+      app_user_connections: {
+        Row: {
+          account_email: string | null
+          connection_key_ciphertext: string
+          connector_id: string
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_email?: string | null
+          connection_key_ciphertext: string
+          connector_id: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_email?: string | null
+          connection_key_ciphertext?: string
+          connector_id?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       attempts: {
         Row: {
           created_at: string
@@ -218,6 +248,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      email_sends: {
+        Row: {
+          attachments: string[]
+          created_at: string
+          doc_ref: string | null
+          doc_type: string
+          error: string | null
+          id: string
+          recipient: string
+          sender_email: string | null
+          status: string
+          subject: string
+          user_id: string
+        }
+        Insert: {
+          attachments?: string[]
+          created_at?: string
+          doc_ref?: string | null
+          doc_type: string
+          error?: string | null
+          id?: string
+          recipient: string
+          sender_email?: string | null
+          status: string
+          subject: string
+          user_id: string
+        }
+        Update: {
+          attachments?: string[]
+          created_at?: string
+          doc_ref?: string | null
+          doc_type?: string
+          error?: string | null
+          id?: string
+          recipient?: string
+          sender_email?: string | null
+          status?: string
+          subject?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       incident_actions: {
         Row: {
