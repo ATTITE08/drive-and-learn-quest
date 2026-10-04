@@ -18,7 +18,7 @@ export async function blobToBase64(blob: Blob): Promise<string> {
 
 /** Renders an existing (possibly hidden) printable element into a one-page A4 PDF. */
 export async function elementToPdf(el: HTMLElement, landscape = false): Promise<Blob> {
-  const [{ default: html2canvas }, { jsPDF }] = await Promise.all([import("html2canvas"), import("jspdf")]);
+  const [{ default: html2canvas }, { jsPDF }] = await Promise.all([import("html2canvas-pro"), import("jspdf")]);
   const host = document.createElement("div");
   const widthPx = landscape ? 1123 : 794;
   host.style.cssText = `position:fixed;left:-10000px;top:0;width:${widthPx}px;background:#fff;color:#000;padding:16px;z-index:-1;`;
