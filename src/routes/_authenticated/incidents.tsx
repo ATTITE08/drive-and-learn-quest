@@ -11,6 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { AlertTriangle, Send, CheckCircle2, ArrowUpRight, ClipboardList, Printer } from "lucide-react";
+import { IncidentDocActions } from "@/components/IncidentDocActions";
+import { GmailPanel } from "@/components/GmailPanel";
 
 export const Route = createFileRoute("/_authenticated/incidents")({
   component: IncidentsPage,
@@ -295,6 +297,9 @@ function IncidentsPage() {
             ))}
           </ul>
         )}
+
+        <IncidentDocActions report={r} authorLabel={personLabel(r.author_id) ?? ""} actions={acts} />
+
 
         {own && r.status === "brouillon" && (
           <Button size="sm" className="mt-3" onClick={() => submitDraft.mutate(r.id)}>
