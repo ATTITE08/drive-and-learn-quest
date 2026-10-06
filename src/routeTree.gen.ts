@@ -16,6 +16,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedBuilderRouteImport } from './routes/_authenticated/builder'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedEnvoisRouteImport } from './routes/_authenticated/envois'
 import { Route as AuthenticatedEquipeRouteImport } from './routes/_authenticated/equipe'
 import { Route as AuthenticatedFeuilleServiceRouteImport } from './routes/_authenticated/feuille-service'
 import { Route as AuthenticatedIncidentsRouteImport } from './routes/_authenticated/incidents'
@@ -59,6 +60,11 @@ const AuthenticatedBuilderRoute = AuthenticatedBuilderRouteImport.update({
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedEnvoisRoute = AuthenticatedEnvoisRouteImport.update({
+  id: '/envois',
+  path: '/envois',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedEquipeRoute = AuthenticatedEquipeRouteImport.update({
@@ -122,6 +128,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRoute
   '/builder': typeof AuthenticatedBuilderRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/envois': typeof AuthenticatedEnvoisRoute
   '/equipe': typeof AuthenticatedEquipeRoute
   '/feuille-service': typeof AuthenticatedFeuilleServiceRoute
   '/incidents': typeof AuthenticatedIncidentsRoute
@@ -140,6 +147,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminRoute
   '/builder': typeof AuthenticatedBuilderRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/envois': typeof AuthenticatedEnvoisRoute
   '/equipe': typeof AuthenticatedEquipeRoute
   '/feuille-service': typeof AuthenticatedFeuilleServiceRoute
   '/incidents': typeof AuthenticatedIncidentsRoute
@@ -160,6 +168,7 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/builder': typeof AuthenticatedBuilderRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/envois': typeof AuthenticatedEnvoisRoute
   '/_authenticated/equipe': typeof AuthenticatedEquipeRoute
   '/_authenticated/feuille-service': typeof AuthenticatedFeuilleServiceRoute
   '/_authenticated/incidents': typeof AuthenticatedIncidentsRoute
@@ -180,6 +189,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/builder'
     | '/dashboard'
+    | '/envois'
     | '/equipe'
     | '/feuille-service'
     | '/incidents'
@@ -198,6 +208,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/builder'
     | '/dashboard'
+    | '/envois'
     | '/equipe'
     | '/feuille-service'
     | '/incidents'
@@ -217,6 +228,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/_authenticated/builder'
     | '/_authenticated/dashboard'
+    | '/_authenticated/envois'
     | '/_authenticated/equipe'
     | '/_authenticated/feuille-service'
     | '/_authenticated/incidents'
@@ -286,6 +298,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/envois': {
+      id: '/_authenticated/envois'
+      path: '/envois'
+      fullPath: '/envois'
+      preLoaderRoute: typeof AuthenticatedEnvoisRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/equipe': {
@@ -376,6 +395,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedBuilderRoute: typeof AuthenticatedBuilderRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedEnvoisRoute: typeof AuthenticatedEnvoisRoute
   AuthenticatedEquipeRoute: typeof AuthenticatedEquipeRoute
   AuthenticatedFeuilleServiceRoute: typeof AuthenticatedFeuilleServiceRoute
   AuthenticatedIncidentsRoute: typeof AuthenticatedIncidentsRoute
@@ -390,6 +410,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedBuilderRoute: AuthenticatedBuilderRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedEnvoisRoute: AuthenticatedEnvoisRoute,
   AuthenticatedEquipeRoute: AuthenticatedEquipeRoute,
   AuthenticatedFeuilleServiceRoute: AuthenticatedFeuilleServiceRoute,
   AuthenticatedIncidentsRoute: AuthenticatedIncidentsRoute,
