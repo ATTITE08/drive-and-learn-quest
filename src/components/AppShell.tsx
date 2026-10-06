@@ -26,6 +26,7 @@ export function AppShell({ children, role }: { children: ReactNode; role: AppRol
     { to: "/mouvements", label: "Relevé de mouvement" },
     { to: "/feuille-service", label: "Feuille de service" },
     { to: "/prise-service", label: "Prise de service" },
+    { to: "/envois", label: "Historique des envois" },
   ];
 
     if (role === "formateur") nav.push({ to: "/builder", label: "Créer un quiz" });

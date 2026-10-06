@@ -360,6 +360,8 @@ function IncidentsPage() {
         </p>
       </div>
 
+      <GmailPanel />
+
       <Card className="p-6">
         <h2 className="flex items-center gap-2 font-display text-lg font-semibold">
           <AlertTriangle className="h-5 w-5" /> A — Rapport du conducteur
