@@ -11,6 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { AlertTriangle, Send, CheckCircle2, ArrowUpRight, ClipboardList, Printer } from "lucide-react";
+import { IncidentDocActions } from "@/components/IncidentDocActions";
+import { GmailPanel } from "@/components/GmailPanel";
 
 export const Route = createFileRoute("/_authenticated/incidents")({
   component: IncidentsPage,
@@ -296,6 +298,9 @@ function IncidentsPage() {
           </ul>
         )}
 
+        <IncidentDocActions report={r} authorLabel={personLabel(r.author_id) ?? ""} actions={acts} />
+
+
         {own && r.status === "brouillon" && (
           <Button size="sm" className="mt-3" onClick={() => submitDraft.mutate(r.id)}>
             <Send className="mr-1 h-4 w-4" /> Transmettre au chef hiérarchique
@@ -354,6 +359,8 @@ function IncidentsPage() {
           Direction transport — gestion personnel conduite. L'agent établit le rapport du conducteur, le chef de traction rédige l'analyse, puis le rapport remonte jusqu'au chef du département conduite.
         </p>
       </div>
+
+      <GmailPanel />
 
       <Card className="p-6">
         <h2 className="flex items-center gap-2 font-display text-lg font-semibold">

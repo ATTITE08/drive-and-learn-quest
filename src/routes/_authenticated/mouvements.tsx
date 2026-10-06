@@ -9,7 +9,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Send, Trash2, CheckCircle2, XCircle, Wallet, Printer, Save } from "lucide-react";
+import { Plus, Send, Trash2, CheckCircle2, XCircle, Wallet, Printer, Save, Mail } from "lucide-react";
+import { GmailPanel } from "@/components/GmailPanel";
+import { SendEmailDialog } from "@/components/SendEmailDialog";
+import { elementToPdf } from "@/lib/docs/files";
 
 export const Route = createFileRoute("/_authenticated/mouvements")({
   component: MovementsPage,
@@ -234,6 +237,12 @@ function MovementsPage() {
     setPrintId(id);
     setTimeout(() => window.print(), 120);
   };
+  const [sendRec, setSendRec] = useState<any>(null);
+  const openSend = (r: any) => { setPrintId(r.id); setSendRec(r); };
+  const releveRef = (r: any) => {
+    const h = headerOf(r);
+    return [h.mois && h.annee ? `${h.mois} ${h.annee}` : `${r.period_start}`, h.matricule && `Mle ${h.matricule}`].filter(Boolean).join(" – ");
+  };
 
   const LinesTable = ({ id, editable }: { id: string; editable: boolean }) => {
     const l = linesOf(id);
@@ -300,6 +309,8 @@ function MovementsPage() {
           </p>
         </div>
 
+        <GmailPanel />
+
         <Card className="p-6">
           <h2 className="font-display text-lg font-semibold">Nouveau relevé</h2>
           <div className="mt-4 flex flex-wrap items-end gap-4">
@@ -329,6 +340,9 @@ function MovementsPage() {
                     <span className="text-xs text-muted-foreground">{r.period_start} → {r.period_end}</span>
                     <Button variant="outline" size="sm" className="ml-auto" onClick={() => doPrint(r.id)}>
                       <Printer className="mr-1 h-4 w-4" /> Imprimer / PDF
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => openSend(r)}>
+                      <Mail className="mr-1 h-4 w-4" /> Envoyer le relevé par email
                     </Button>
                   </div>
                   <LinesTable id={r.id} editable={false} />
@@ -380,6 +394,9 @@ function MovementsPage() {
                       )}
                       <Button variant="outline" size="sm" className="ml-auto" onClick={() => doPrint(r.id)}>
                         <Printer className="mr-1 h-4 w-4" /> Imprimer / PDF
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => openSend(r)}>
+                        <Mail className="mr-1 h-4 w-4" /> Envoyer le relevé par email
                       </Button>
                     </div>
                     {r.review_comment && <p className="mt-1 text-xs text-muted-foreground">Retour du chef de traction : {r.review_comment}</p>}
@@ -453,7 +470,31 @@ function MovementsPage() {
           />
         </div>
       )}
+
+      {sendRec && (
+        <SendEmailDialog
+          open={!!sendRec}
+          onOpenChange={(o) => { if (!o) setSendRec(null); }}
+          docType="releve"
+          docRef={releveRef(sendRec)}
+          defaultSubject={`Relevé des mouvements — ${releveRef(sendRec)}`}
+          defaultMessage={`Bonjour,\n\nVeuillez trouver ci-joint le relevé des mouvements du personnel roulant (${sendRec.period_start} → ${sendRec.period_end}).\n\nCordialement,\n${agentName(sendRec.agent_id)}`}
+          attachments={[{
+            id: "pdf",
+            filename: `Releve_${releveRef(sendRec).replace(/[^\w-]+/g, "_")}.pdf`,
+            mimeType: "application/pdf",
+            defaultChecked: true,
+            locked: true,
+            build: async () => {
+              const el = document.querySelector(".print-sheet") as HTMLElement | null;
+              if (!el) throw new Error("Relevé introuvable");
+              return elementToPdf(el);
+            },
+          }]}
+        />
+      )}
     </>
+
   );
 }
 
