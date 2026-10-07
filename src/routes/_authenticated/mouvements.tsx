@@ -9,10 +9,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Send, Trash2, CheckCircle2, XCircle, Wallet, Printer, Save, Mail } from "lucide-react";
+import { Plus, Send, Trash2, CheckCircle2, XCircle, Wallet, Printer, Save, Mail, FileDown } from "lucide-react";
 import { GmailPanel } from "@/components/GmailPanel";
 import { SendEmailDialog } from "@/components/SendEmailDialog";
-import { elementToPdf } from "@/lib/docs/files";
+import { elementToPdf, downloadBlob } from "@/lib/docs/files";
 
 export const Route = createFileRoute("/_authenticated/mouvements")({
   component: MovementsPage,
@@ -239,6 +239,16 @@ function MovementsPage() {
   };
   const [sendRec, setSendRec] = useState<any>(null);
   const openSend = (r: any) => { setPrintId(r.id); setSendRec(r); };
+  const downloadReleve = (r: any) => {
+    setPrintId(r.id);
+    setTimeout(async () => {
+      try {
+        const el = document.querySelector(".print-sheet") as HTMLElement | null;
+        if (!el) throw new Error("Relevé introuvable");
+        downloadBlob(await elementToPdf(el), `Releve_${releveRef(r).replace(/[^\w-]+/g, "_")}.pdf`);
+      } catch (e: any) { toast.error(e?.message ?? "Génération impossible"); }
+    }, 200);
+  };
   const releveRef = (r: any) => {
     const h = headerOf(r);
     return [h.mois && h.annee ? `${h.mois} ${h.annee}` : `${r.period_start}`, h.matricule && `Mle ${h.matricule}`].filter(Boolean).join(" – ");
@@ -344,6 +354,9 @@ function MovementsPage() {
                     <Button variant="outline" size="sm" onClick={() => openSend(r)}>
                       <Mail className="mr-1 h-4 w-4" /> Envoyer le relevé par email
                     </Button>
+                    <Button variant="outline" size="sm" onClick={() => downloadReleve(r)}>
+                      <FileDown className="mr-1 h-4 w-4" /> Télécharger PDF
+                    </Button>
                   </div>
                   <LinesTable id={r.id} editable={false} />
                   <p className="mt-2 text-xs text-muted-foreground">Distance totale : {totals(r.id).km} km</p>
@@ -397,6 +410,9 @@ function MovementsPage() {
                       </Button>
                       <Button variant="outline" size="sm" onClick={() => openSend(r)}>
                         <Mail className="mr-1 h-4 w-4" /> Envoyer le relevé par email
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => downloadReleve(r)}>
+                        <FileDown className="mr-1 h-4 w-4" /> Télécharger PDF
                       </Button>
                     </div>
                     {r.review_comment && <p className="mt-1 text-xs text-muted-foreground">Retour du chef de traction : {r.review_comment}</p>}
