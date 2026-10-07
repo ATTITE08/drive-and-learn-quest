@@ -193,58 +193,129 @@ export type Database = {
       duty_logs: {
         Row: {
           agent_id: string
+          alcohol_test_number: string | null
+          alcohol_test_result:
+            | Database["public"]["Enums"]["alcohol_result"]
+            | null
+          alcohol_test_time: string | null
           created_at: string
+          depot_arrivee_id: string | null
+          depot_depart_id: string | null
           depot_id: string | null
           end_time: string | null
           equipment_ok: boolean
+          fonction: string | null
           handover_from: string | null
           handover_to: string | null
           id: string
           observations: string | null
           post: string
+          recorded_by: string | null
           service_date: string
+          service_line_id: string | null
           start_time: string | null
+          station_arrivee_id: string | null
+          station_depart_id: string | null
           status: string
           updated_at: string
         }
         Insert: {
           agent_id: string
+          alcohol_test_number?: string | null
+          alcohol_test_result?:
+            | Database["public"]["Enums"]["alcohol_result"]
+            | null
+          alcohol_test_time?: string | null
           created_at?: string
+          depot_arrivee_id?: string | null
+          depot_depart_id?: string | null
           depot_id?: string | null
           end_time?: string | null
           equipment_ok?: boolean
+          fonction?: string | null
           handover_from?: string | null
           handover_to?: string | null
           id?: string
           observations?: string | null
           post?: string
+          recorded_by?: string | null
           service_date?: string
+          service_line_id?: string | null
           start_time?: string | null
+          station_arrivee_id?: string | null
+          station_depart_id?: string | null
           status?: string
           updated_at?: string
         }
         Update: {
           agent_id?: string
+          alcohol_test_number?: string | null
+          alcohol_test_result?:
+            | Database["public"]["Enums"]["alcohol_result"]
+            | null
+          alcohol_test_time?: string | null
           created_at?: string
+          depot_arrivee_id?: string | null
+          depot_depart_id?: string | null
           depot_id?: string | null
           end_time?: string | null
           equipment_ok?: boolean
+          fonction?: string | null
           handover_from?: string | null
           handover_to?: string | null
           id?: string
           observations?: string | null
           post?: string
+          recorded_by?: string | null
           service_date?: string
+          service_line_id?: string | null
           start_time?: string | null
+          station_arrivee_id?: string | null
+          station_depart_id?: string | null
           status?: string
           updated_at?: string
         }
         Relationships: [
           {
+            foreignKeyName: "duty_logs_depot_arrivee_id_fkey"
+            columns: ["depot_arrivee_id"]
+            isOneToOne: false
+            referencedRelation: "depots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "duty_logs_depot_depart_id_fkey"
+            columns: ["depot_depart_id"]
+            isOneToOne: false
+            referencedRelation: "depots"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "duty_logs_depot_id_fkey"
             columns: ["depot_id"]
             isOneToOne: false
             referencedRelation: "depots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "duty_logs_service_line_id_fkey"
+            columns: ["service_line_id"]
+            isOneToOne: false
+            referencedRelation: "service_sheet_lines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "duty_logs_station_arrivee_id_fkey"
+            columns: ["station_arrivee_id"]
+            isOneToOne: false
+            referencedRelation: "stations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "duty_logs_station_depart_id_fkey"
+            columns: ["station_depart_id"]
+            isOneToOne: false
+            referencedRelation: "stations"
             referencedColumns: ["id"]
           },
         ]
@@ -288,6 +359,24 @@ export type Database = {
           status?: string
           subject?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      function_duty_rules: {
+        Row: {
+          level: Database["public"]["Enums"]["agent_level"]
+          requires_duty_log: boolean
+          updated_at: string
+        }
+        Insert: {
+          level: Database["public"]["Enums"]["agent_level"]
+          requires_duty_log?: boolean
+          updated_at?: string
+        }
+        Update: {
+          level?: Database["public"]["Enums"]["agent_level"]
+          requires_duty_log?: boolean
+          updated_at?: string
         }
         Relationships: []
       }
@@ -696,48 +785,155 @@ export type Database = {
       }
       service_sheet_lines: {
         Row: {
+          actual_depot_arrivee_id: string | null
+          actual_depot_depart_id: string | null
+          actual_end: string | null
+          actual_source_duty_log_id: string | null
+          actual_start: string | null
+          actual_station_arrivee_id: string | null
+          actual_station_depart_id: string | null
           agent_id: string | null
           agent_name: string | null
           created_at: string
+          day_status: string
           details: Json
           end_time: string | null
+          fonction: string | null
           id: string
           notes: string | null
+          planned_depot_arrivee_id: string | null
+          planned_depot_depart_id: string | null
+          planned_end: string | null
+          planned_start: string | null
+          planned_station_arrivee_id: string | null
+          planned_station_depart_id: string | null
           role_label: string | null
+          roulement: string | null
+          service_code: string | null
           sheet_id: string
           start_time: string | null
           task: string | null
           train_number: string | null
         }
         Insert: {
+          actual_depot_arrivee_id?: string | null
+          actual_depot_depart_id?: string | null
+          actual_end?: string | null
+          actual_source_duty_log_id?: string | null
+          actual_start?: string | null
+          actual_station_arrivee_id?: string | null
+          actual_station_depart_id?: string | null
           agent_id?: string | null
           agent_name?: string | null
           created_at?: string
+          day_status?: string
           details?: Json
           end_time?: string | null
+          fonction?: string | null
           id?: string
           notes?: string | null
+          planned_depot_arrivee_id?: string | null
+          planned_depot_depart_id?: string | null
+          planned_end?: string | null
+          planned_start?: string | null
+          planned_station_arrivee_id?: string | null
+          planned_station_depart_id?: string | null
           role_label?: string | null
+          roulement?: string | null
+          service_code?: string | null
           sheet_id: string
           start_time?: string | null
           task?: string | null
           train_number?: string | null
         }
         Update: {
+          actual_depot_arrivee_id?: string | null
+          actual_depot_depart_id?: string | null
+          actual_end?: string | null
+          actual_source_duty_log_id?: string | null
+          actual_start?: string | null
+          actual_station_arrivee_id?: string | null
+          actual_station_depart_id?: string | null
           agent_id?: string | null
           agent_name?: string | null
           created_at?: string
+          day_status?: string
           details?: Json
           end_time?: string | null
+          fonction?: string | null
           id?: string
           notes?: string | null
+          planned_depot_arrivee_id?: string | null
+          planned_depot_depart_id?: string | null
+          planned_end?: string | null
+          planned_start?: string | null
+          planned_station_arrivee_id?: string | null
+          planned_station_depart_id?: string | null
           role_label?: string | null
+          roulement?: string | null
+          service_code?: string | null
           sheet_id?: string
           start_time?: string | null
           task?: string | null
           train_number?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "service_sheet_lines_actual_depot_arrivee_id_fkey"
+            columns: ["actual_depot_arrivee_id"]
+            isOneToOne: false
+            referencedRelation: "depots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_sheet_lines_actual_depot_depart_id_fkey"
+            columns: ["actual_depot_depart_id"]
+            isOneToOne: false
+            referencedRelation: "depots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_sheet_lines_actual_station_arrivee_id_fkey"
+            columns: ["actual_station_arrivee_id"]
+            isOneToOne: false
+            referencedRelation: "stations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_sheet_lines_actual_station_depart_id_fkey"
+            columns: ["actual_station_depart_id"]
+            isOneToOne: false
+            referencedRelation: "stations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_sheet_lines_planned_depot_arrivee_id_fkey"
+            columns: ["planned_depot_arrivee_id"]
+            isOneToOne: false
+            referencedRelation: "depots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_sheet_lines_planned_depot_depart_id_fkey"
+            columns: ["planned_depot_depart_id"]
+            isOneToOne: false
+            referencedRelation: "depots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_sheet_lines_planned_station_arrivee_id_fkey"
+            columns: ["planned_station_arrivee_id"]
+            isOneToOne: false
+            referencedRelation: "stations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_sheet_lines_planned_station_depart_id_fkey"
+            columns: ["planned_station_depart_id"]
+            isOneToOne: false
+            referencedRelation: "stations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "service_sheet_lines_sheet_id_fkey"
             columns: ["sheet_id"]
@@ -797,6 +993,27 @@ export type Database = {
           },
         ]
       }
+      stations: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -823,7 +1040,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      save_duty_log: { Args: { _payload: Json }; Returns: string }
     }
     Enums: {
       agent_level:
@@ -837,6 +1054,7 @@ export type Database = {
         | "chef_depot"
         | "chef_departement"
         | "assistant_chef_departement"
+      alcohol_result: "negatif" | "positif"
       app_role: "admin" | "formateur" | "agent"
       quiz_status: "draft" | "published"
       subject: "igs" | "prac" | "frein" | "technologies"
@@ -979,6 +1197,7 @@ export const Constants = {
         "chef_departement",
         "assistant_chef_departement",
       ],
+      alcohol_result: ["negatif", "positif"],
       app_role: ["admin", "formateur", "agent"],
       quiz_status: ["draft", "published"],
       subject: ["igs", "prac", "frein", "technologies"],
