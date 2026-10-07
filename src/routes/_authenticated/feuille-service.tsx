@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Plus, Trash2, ClipboardList, CheckCircle2, Printer } from "lucide-react";
+import type { Station } from "@/components/StationSelect";
 
 export const Route = createFileRoute("/_authenticated/feuille-service")({
   component: ServiceSheetPage,
