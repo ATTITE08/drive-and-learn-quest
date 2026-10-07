@@ -50,6 +50,7 @@ const FOOTER_FIELDS = [
 ];
 
 const emptyLine = () => ({
+  agent_id: "",
   agent_name: "",
   aide1: "",
   aide2: "",
@@ -64,6 +65,14 @@ const emptyLine = () => ({
   moyenne_hebdo: "",
   task: "",
   notes: "",
+  day_status: "service",
+  fonction: "",
+  roulement: "",
+  service_code: "",
+  planned_station_depart_id: "",
+  planned_station_arrivee_id: "",
+  planned_depot_depart_id: "",
+  planned_depot_arrivee_id: "",
 });
 
 function ServiceSheetPage() {
@@ -84,15 +93,17 @@ function ServiceSheetPage() {
     queryFn: async () => {
       const { data: u } = await supabase.auth.getUser();
       const uid = u.user?.id ?? "";
-      const [{ data: depots }, { data: sheets }] = await Promise.all([
+      const [{ data: depots }, { data: sheets }, { data: stations }, { data: agents }] = await Promise.all([
         supabase.from("depots").select("id,name").order("name"),
         supabase.from("service_sheets").select("*").order("service_date", { ascending: false }).limit(50),
+        supabase.from("stations").select("id,code,name").order("code"),
+        supabase.from("profiles").select("id,full_name,matricule,level").order("full_name"),
       ]);
       const ids = (sheets ?? []).map((s: any) => s.id);
       const { data: lines } = ids.length
         ? await supabase.from("service_sheet_lines").select("*").in("sheet_id", ids).order("start_time")
         : { data: [] as any[] };
-      return { uid, depots: depots ?? [], sheets: sheets ?? [], lines: lines ?? [] };
+      return { uid, depots: depots ?? [], sheets: sheets ?? [], lines: lines ?? [], stations: (stations ?? []) as Station[], agents: agents ?? [] };
     },
   });
 
@@ -117,14 +128,27 @@ function ServiceSheetPage() {
 
   const addLine = useMutation({
     mutationFn: async (sheetId: string) => {
-      if (!line.agent_name.trim()) throw new Error("Indiquez le conducteur");
+      const ag = data?.agents.find((a: any) => a.id === line.agent_id);
+      const name = line.agent_name.trim() || ag?.full_name || "";
+      if (!name) throw new Error("Indiquez le conducteur");
       const { error } = await supabase.from("service_sheet_lines").insert({
         sheet_id: sheetId,
-        agent_name: line.agent_name.trim(),
+        agent_id: line.agent_id || null,
+        agent_name: name,
         role_label: line.role_label || null,
         train_number: line.train_number || null,
         start_time: line.start_time || null,
         end_time: line.end_time || null,
+        planned_start: line.day_status === "repos" ? null : line.start_time || null,
+        planned_end: line.day_status === "repos" ? null : line.end_time || null,
+        day_status: line.day_status,
+        fonction: line.fonction || ag?.level || null,
+        roulement: line.roulement || null,
+        service_code: line.service_code || null,
+        planned_station_depart_id: line.planned_station_depart_id || null,
+        planned_station_arrivee_id: line.planned_station_arrivee_id || null,
+        planned_depot_depart_id: line.planned_depot_depart_id || null,
+        planned_depot_arrivee_id: line.planned_depot_arrivee_id || null,
         task: line.task || null,
         notes: line.notes || null,
         details: {
