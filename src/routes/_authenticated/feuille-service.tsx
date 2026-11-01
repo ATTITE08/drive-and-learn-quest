@@ -11,7 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Plus, Trash2, ClipboardList, CheckCircle2, Printer } from "lucide-react";
-import type { Station } from "@/components/StationSelect";
+import { StationSelect, DepotSelect, stationLabel, type Station } from "@/components/StationSelect";
+import { LEVELS } from "@/lib/constants";
 
 export const Route = createFileRoute("/_authenticated/feuille-service")({
   component: ServiceSheetPage,
@@ -276,6 +277,9 @@ function ServiceSheetPage() {
                             <th className="py-1 pr-3">Aide-conducteur 1</th>
                             <th className="py-1 pr-3">Aide-conducteur 2</th>
                             <th className="py-1 pr-3">Graphique</th>
+                            <th className="py-1 pr-3">Statut / roulement / service</th>
+                            <th className="py-1 pr-3">Prévu</th>
+                            <th className="py-1 pr-3">Réel</th>
                             <th className="py-1 pr-3">Train</th>
                             <th className="py-1 pr-3">Locomotive</th>
                             <th className="py-1 pr-3">Nbre agents</th>
@@ -295,6 +299,9 @@ function ServiceSheetPage() {
                                 <td className="py-1 pr-3">{d.aide1 || "—"}</td>
                                 <td className="py-1 pr-3">{d.aide2 || "—"}</td>
                                 <td className="py-1 pr-3">{[l.start_time, l.end_time].filter(Boolean).join(" - ") || "—"}</td>
+                                <td className="py-1 pr-3">{l.day_status === "repos" ? "REPOS" : "SERVICE"}<br />{[l.roulement, l.service_code, l.fonction].filter(Boolean).join(" · ")}</td>
+                                <td className="py-1 pr-3"><p>{[l.planned_start ?? l.start_time, l.planned_end ?? l.end_time].filter(Boolean).join(" – ") || "—"}</p><p>{stationLabel(data.stations, l.planned_station_depart_id)} → {stationLabel(data.stations, l.planned_station_arrivee_id)}</p><p>{depotName(l.planned_depot_depart_id)} → {depotName(l.planned_depot_arrivee_id)}</p></td>
+                                <td className="py-1 pr-3"><p>{[l.actual_start, l.actual_end].filter(Boolean).join(" – ") || "—"}</p><p>{stationLabel(data.stations, l.actual_station_depart_id)} → {stationLabel(data.stations, l.actual_station_arrivee_id)}</p><p>{depotName(l.actual_depot_depart_id)} → {depotName(l.actual_depot_arrivee_id)}</p></td>
                                 <td className="py-1 pr-3">{l.train_number ?? "—"}</td>
                                 <td className="py-1 pr-3">{d.locomotive || "—"}</td>
                                 <td className="py-1 pr-3">{d.nbre_agents || "—"}</td>
@@ -327,6 +334,15 @@ function ServiceSheetPage() {
                   {own && openId === s.id && (
                     <>
                       <div className="mt-3 grid gap-3 rounded-lg border p-3 sm:grid-cols-3">
+                        <div><Label>Agent enregistré</Label><Select value={line.agent_id || "none"} onValueChange={v => { const agent = data.agents.find(a => a.id === v); setLine({ ...line, agent_id: v === "none" ? "" : v, agent_name: agent?.full_name ?? "", fonction: agent?.level ?? "" }); }}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">Sans compte associé</SelectItem>{data.agents.map(a => <SelectItem key={a.id} value={a.id}>{a.full_name || a.matricule || "Agent"}</SelectItem>)}</SelectContent></Select></div>
+                        <div><Label>Statut</Label><Select value={line.day_status} onValueChange={v => setLine({ ...line, day_status: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="service">SERVICE</SelectItem><SelectItem value="repos">REPOS</SelectItem></SelectContent></Select></div>
+                        <div><Label>Fonction</Label><Select value={line.fonction} onValueChange={v => setLine({ ...line, fonction: v })}><SelectTrigger><SelectValue placeholder="Fonction" /></SelectTrigger><SelectContent>{LEVELS.map(l => <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>)}</SelectContent></Select></div>
+                        <div><Label>Roulement</Label><Input value={line.roulement} onChange={e => setLine({ ...line, roulement: e.target.value })} maxLength={100} /></div>
+                        <div><Label>Service</Label><Input value={line.service_code} onChange={e => setLine({ ...line, service_code: e.target.value })} maxLength={100} /></div>
+                        <div><Label>Gare de départ prévue</Label><StationSelect stations={data.stations} value={line.planned_station_depart_id} onChange={v => setLine({ ...line, planned_station_depart_id: v })} /></div>
+                        <div><Label>Gare d’arrivée prévue</Label><StationSelect stations={data.stations} value={line.planned_station_arrivee_id} onChange={v => setLine({ ...line, planned_station_arrivee_id: v })} /></div>
+                        <div><Label>Dépôt de départ prévu</Label><DepotSelect depots={data.depots} value={line.planned_depot_depart_id} onChange={v => setLine({ ...line, planned_depot_depart_id: v })} /></div>
+                        <div><Label>Dépôt d’arrivée prévu</Label><DepotSelect depots={data.depots} value={line.planned_depot_arrivee_id} onChange={v => setLine({ ...line, planned_depot_arrivee_id: v })} /></div>
                         <div><Label className="text-xs">Conducteur</Label><Input value={line.agent_name} onChange={(e) => setLine({ ...line, agent_name: e.target.value })} /></div>
                         <div><Label className="text-xs">Aide-conducteur 1</Label><Input value={line.aide1} onChange={(e) => setLine({ ...line, aide1: e.target.value })} /></div>
                         <div><Label className="text-xs">Aide-conducteur 2</Label><Input value={line.aide2} onChange={(e) => setLine({ ...line, aide2: e.target.value })} /></div>
