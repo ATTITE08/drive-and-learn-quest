@@ -18,4 +18,5 @@ describe('Pointage CAMRAIL', () => {
     const r=calculatePointage(days); expect(r.worked).toBe(10800); expect(r.potential).toBe(600); expect(r.retained).toBe(420);
   });
   it('ne considère pas un service ouvert comme zéro heure complet', () => expect(calculatePointage([{date:'2026-11-01',status:'service',start:'08:00',end:null,source:'Prise de service'}]).incomplete).toBe(true));
+  it('additionne deux vacations sans compter la pause', () => expect(calculatePointage([{date:'2026-11-01',status:'service',start:'08:00',end:'18:00',total:480,source:'Prise de service'}]).worked).toBe(480));
 });

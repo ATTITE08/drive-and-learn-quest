@@ -21,6 +21,7 @@ import { Route as AuthenticatedEquipeRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedFeuilleServiceRouteImport } from './routes/_authenticated/feuille-service'
 import { Route as AuthenticatedIncidentsRouteImport } from './routes/_authenticated/incidents'
 import { Route as AuthenticatedMouvementsRouteImport } from './routes/_authenticated/mouvements'
+import { Route as AuthenticatedPointageRouteImport } from './routes/_authenticated/pointage'
 import { Route as AuthenticatedPriseServiceRouteImport } from './routes/_authenticated/prise-service'
 import { Route as AuthenticatedQuizzesRouteImport } from './routes/_authenticated/quizzes'
 import { Route as AuthenticatedResultsRouteImport } from './routes/_authenticated/results'
@@ -88,6 +89,11 @@ const AuthenticatedMouvementsRoute = AuthenticatedMouvementsRouteImport.update({
   path: '/mouvements',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPointageRoute = AuthenticatedPointageRouteImport.update({
+  id: '/pointage',
+  path: '/pointage',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedPriseServiceRoute =
   AuthenticatedPriseServiceRouteImport.update({
     id: '/prise-service',
@@ -133,6 +139,7 @@ export interface FileRoutesByFullPath {
   '/feuille-service': typeof AuthenticatedFeuilleServiceRoute
   '/incidents': typeof AuthenticatedIncidentsRoute
   '/mouvements': typeof AuthenticatedMouvementsRoute
+  '/pointage': typeof AuthenticatedPointageRoute
   '/prise-service': typeof AuthenticatedPriseServiceRoute
   '/quizzes': typeof AuthenticatedQuizzesRouteWithChildren
   '/results': typeof AuthenticatedResultsRoute
@@ -152,6 +159,7 @@ export interface FileRoutesByTo {
   '/feuille-service': typeof AuthenticatedFeuilleServiceRoute
   '/incidents': typeof AuthenticatedIncidentsRoute
   '/mouvements': typeof AuthenticatedMouvementsRoute
+  '/pointage': typeof AuthenticatedPointageRoute
   '/prise-service': typeof AuthenticatedPriseServiceRoute
   '/quizzes': typeof AuthenticatedQuizzesRouteWithChildren
   '/results': typeof AuthenticatedResultsRoute
@@ -173,6 +181,7 @@ export interface FileRoutesById {
   '/_authenticated/feuille-service': typeof AuthenticatedFeuilleServiceRoute
   '/_authenticated/incidents': typeof AuthenticatedIncidentsRoute
   '/_authenticated/mouvements': typeof AuthenticatedMouvementsRoute
+  '/_authenticated/pointage': typeof AuthenticatedPointageRoute
   '/_authenticated/prise-service': typeof AuthenticatedPriseServiceRoute
   '/_authenticated/quizzes': typeof AuthenticatedQuizzesRouteWithChildren
   '/_authenticated/results': typeof AuthenticatedResultsRoute
@@ -194,6 +203,7 @@ export interface FileRouteTypes {
     | '/feuille-service'
     | '/incidents'
     | '/mouvements'
+    | '/pointage'
     | '/prise-service'
     | '/quizzes'
     | '/results'
@@ -213,6 +223,7 @@ export interface FileRouteTypes {
     | '/feuille-service'
     | '/incidents'
     | '/mouvements'
+    | '/pointage'
     | '/prise-service'
     | '/quizzes'
     | '/results'
@@ -233,6 +244,7 @@ export interface FileRouteTypes {
     | '/_authenticated/feuille-service'
     | '/_authenticated/incidents'
     | '/_authenticated/mouvements'
+    | '/_authenticated/pointage'
     | '/_authenticated/prise-service'
     | '/_authenticated/quizzes'
     | '/_authenticated/results'
@@ -335,6 +347,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMouvementsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/pointage': {
+      id: '/_authenticated/pointage'
+      path: '/pointage'
+      fullPath: '/pointage'
+      preLoaderRoute: typeof AuthenticatedPointageRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/prise-service': {
       id: '/_authenticated/prise-service'
       path: '/prise-service'
@@ -400,6 +419,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedFeuilleServiceRoute: typeof AuthenticatedFeuilleServiceRoute
   AuthenticatedIncidentsRoute: typeof AuthenticatedIncidentsRoute
   AuthenticatedMouvementsRoute: typeof AuthenticatedMouvementsRoute
+  AuthenticatedPointageRoute: typeof AuthenticatedPointageRoute
   AuthenticatedPriseServiceRoute: typeof AuthenticatedPriseServiceRoute
   AuthenticatedQuizzesRoute: typeof AuthenticatedQuizzesRouteWithChildren
   AuthenticatedResultsRoute: typeof AuthenticatedResultsRoute
@@ -415,6 +435,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedFeuilleServiceRoute: AuthenticatedFeuilleServiceRoute,
   AuthenticatedIncidentsRoute: AuthenticatedIncidentsRoute,
   AuthenticatedMouvementsRoute: AuthenticatedMouvementsRoute,
+  AuthenticatedPointageRoute: AuthenticatedPointageRoute,
   AuthenticatedPriseServiceRoute: AuthenticatedPriseServiceRoute,
   AuthenticatedQuizzesRoute: AuthenticatedQuizzesRouteWithChildren,
   AuthenticatedResultsRoute: AuthenticatedResultsRoute,

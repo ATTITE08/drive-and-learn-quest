@@ -98,7 +98,7 @@ function ServiceSheetPage() {
       const [{ data: depots }, { data: sheets }, { data: stations }, { data: agents }] = await Promise.all([
         supabase.from("depots").select("id,name").order("name"),
         supabase.from("service_sheets").select("*").order("service_date", { ascending: false }).limit(50),
-        supabase.from("stations").select("id,code,name").order("code"),
+        supabase.from("stations").select("id,code,name,active").order("code"),
         supabase.from("profiles").select("id,full_name,matricule,level").order("full_name"),
       ]);
       const ids = (sheets ?? []).map((s: any) => s.id);

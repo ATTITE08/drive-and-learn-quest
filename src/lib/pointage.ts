@@ -1,4 +1,4 @@
-export type DayInput = { date: string; status: string; start: string | null; end: string | null; source: string; roulement?: string | null };
+export type DayInput = { date: string; status: string; start: string | null; end: string | null; source: string; roulement?: string | null; total?: number; open?: boolean };
 export function durationMinutes(start: string | null, end: string | null) {
   if (!start || !end) return null;
   const parse = (s: string) => Number(s.slice(0, 2)) * 60 + Number(s.slice(3, 5));
@@ -12,7 +12,7 @@ export function calculatePointage(days: DayInput[]) {
     if (day.status === 'repos') { separated = true; return { ...day, minutes: 0, group: null }; }
     if (day.status === 'absent') return { ...day, minutes: null, group: null };
     if (separated) { group++; separated = false; }
-    return { ...day, minutes: durationMinutes(day.start, day.end), group };
+    return { ...day, minutes: day.open ? null : day.total ?? durationMinutes(day.start, day.end), group };
   });
   const groups = Array.from({ length: group }, (_, i) => {
     const members = rows.filter(r => r.group === i + 1);

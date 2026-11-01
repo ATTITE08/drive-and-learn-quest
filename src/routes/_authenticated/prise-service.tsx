@@ -58,7 +58,7 @@ function DutyLogPage() {
       const [depotResult, logResult, stationResult, ruleResult, profileResult] = await Promise.all([
         supabase.from("depots").select("id,name").order("name"),
         supabase.from("duty_logs").select("*").order("service_date", { ascending: false }).limit(100),
-        supabase.from("stations").select("id,code,name").order("code"),
+        supabase.from("stations").select("id,code,name,active").order("code"),
         supabase.from("function_duty_rules").select("*"),
         supabase.from("profiles").select("level").eq("id", uid).single(),
       ]);

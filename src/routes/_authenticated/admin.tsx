@@ -17,11 +17,13 @@ import { LEVELS, SUBJECTS, levelLabel, subjectLabel, levelOrder, levelGrade } fr
 import { toast } from "sonner";
 import { Sparkles, Upload, FileText, Trash2, Users, SlidersHorizontal, Pencil } from "lucide-react";
 import { RubricEditor } from "@/components/RubricEditor";
+import { ServiceReferenceAdmin } from "@/components/ServiceReferenceAdmin";
 
 
 
 export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminPage,
+  head: () => ({ meta: [{ title: "Administration — RailFormation CAMRAIL" }, { name: "description", content: "Gestion des documents, utilisateurs, gares et fonctions des agents CAMRAIL." }, { property: "og:title", content: "Administration — RailFormation CAMRAIL" }, { property: "og:description", content: "Administration des questionnaires et référentiels CAMRAIL." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
 });
 
 function AdminPage() {
@@ -45,9 +47,10 @@ function AdminPage() {
         <Button asChild><Link to="/builder"><Pencil className="h-4 w-4 mr-1" /> Créer un quiz</Link></Button>
       </div>
       <Tabs defaultValue="documents">
-        <TabsList>
+        <TabsList className="h-auto w-full flex-wrap justify-start">
           <TabsTrigger value="documents"><FileText className="h-4 w-4 mr-1" /> Documents & Quiz</TabsTrigger>
           <TabsTrigger value="users"><Users className="h-4 w-4 mr-1" /> Utilisateurs</TabsTrigger>
+          <TabsTrigger value="service"><SlidersHorizontal className="h-4 w-4 mr-1" /> Gares & Fonctions</TabsTrigger>
         </TabsList>
         <TabsContent value="documents" className="space-y-6 mt-6">
           <UploadDocCard />
@@ -56,6 +59,7 @@ function AdminPage() {
         <TabsContent value="users" className="mt-6">
           <UsersAdmin />
         </TabsContent>
+        <TabsContent value="service" className="mt-6"><ServiceReferenceAdmin /></TabsContent>
       </Tabs>
     </div>
   );
