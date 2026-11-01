@@ -9,6 +9,7 @@ export const Route = createFileRoute("/")({
     if (data.user) throw redirect({ to: "/dashboard" });
   },
   component: Landing,
+  head: () => ({ meta: [{ title: "RailFormation — Agents de conduite CAMRAIL" }, { name: "description", content: "Formation et évaluation des agents de conduite CAMRAIL en sécurité, procédures, freinage et technologies." }, { property: "og:title", content: "RailFormation — Agents de conduite CAMRAIL" }, { property: "og:description", content: "Formation, questionnaires et suivi des agents de conduite CAMRAIL." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
 });
 
 function Landing() {

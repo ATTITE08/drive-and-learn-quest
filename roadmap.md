@@ -1,6 +1,7 @@
 # Roadmap
 
 ## En cours
+- [ ] Finaliser gares validées, prise de service, prévu/réel, pointage et administration
 - [x] Version installable sur téléphone (icône, écran d'accueil)
 - [x] Impression rapport d'incident et feuille de service
 - [x] Détails des réponses dans Résultats, rubrique Réponses supprimée

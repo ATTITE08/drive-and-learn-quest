@@ -26,6 +26,7 @@ export function AppShell({ children, role }: { children: ReactNode; role: AppRol
     { to: "/mouvements", label: "Relevé de mouvement" },
     { to: "/feuille-service", label: "Feuille de service" },
     { to: "/prise-service", label: "Prise de service" },
+    { to: "/pointage", label: "Feuille de pointage" },
     { to: "/envois", label: "Historique des envois" },
   ];
 
@@ -49,13 +50,13 @@ export function AppShell({ children, role }: { children: ReactNode; role: AppRol
             </span>
             <span>RailFormation</span>
           </Link>
-          <nav className="hidden md:flex items-center gap-1">
+          <nav className="hidden md:flex min-w-0 flex-1 overflow-x-auto items-center gap-1">
             {nav.map((n) => (
               <Link
                 key={n.to}
                 to={n.to}
                 className={cn(
-                  "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+                  "whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
                   pathname.startsWith(n.to)
                     ? "bg-secondary text-foreground"
                     : "text-muted-foreground hover:text-foreground hover:bg-secondary/60",
