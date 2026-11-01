@@ -8,3 +8,6 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Service actuals are synchronized through the existing transactional save_duty_log RPC; never update planned fields through a duty action.
+- Pointage is computed from authorized service/duty reads in a pure shared module, avoiding duplicate stored totals.
