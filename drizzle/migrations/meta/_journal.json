@@ -22,6 +22,13 @@
       "when": 1791404981809,
       "tag": "0002_pointage_gares_prise_service",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1793557188284,
+      "tag": "0003_station_activation_duty_validation",
+      "breakpoints": true
     }
   ]
 }
