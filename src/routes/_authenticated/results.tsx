@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 import { AttemptDetail } from "@/components/AttemptDetail";
 
 export const Route = createFileRoute("/_authenticated/results")({
-  head: () => ({ meta: [{ title: "Résultats — RailFormation" }] }),
+  head: () => ({ meta: [{ title: "Résultats — RailFormation CAMRAIL" }, { name: "description", content: "Résultats des évaluations CAMRAIL avec scores, réponses et corrections détaillées." }, { property: "og:title", content: "Résultats — RailFormation CAMRAIL" }, { property: "og:description", content: "Consultation des notes et du détail des réponses des agents." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: Results,
 });
 

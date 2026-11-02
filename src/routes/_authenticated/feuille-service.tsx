@@ -90,21 +90,24 @@ function ServiceSheetPage() {
   const [line, setLine] = useState(emptyLine());
   const [footers, setFooters] = useState<Record<string, Record<string, string>>>({});
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: ["service-sheets"],
     queryFn: async () => {
       const { data: u } = await supabase.auth.getUser();
       const uid = u.user?.id ?? "";
-      const [{ data: depots }, { data: sheets }, { data: stations }, { data: agents }] = await Promise.all([
+      const results = await Promise.all([
         supabase.from("depots").select("id,name").order("name"),
         supabase.from("service_sheets").select("*").order("service_date", { ascending: false }).limit(50),
         supabase.from("stations").select("id,code,name,active").order("code"),
         supabase.from("profiles").select("id,full_name,matricule,level").order("full_name"),
       ]);
+      for (const result of results) if (result.error) throw result.error;
+      const [{ data: depots }, { data: sheets }, { data: stations }, { data: agents }] = results;
       const ids = (sheets ?? []).map((s: any) => s.id);
-      const { data: lines } = ids.length
+      const { data: lines, error: linesError } = ids.length
         ? await supabase.from("service_sheet_lines").select("*").in("sheet_id", ids).order("start_time")
-        : { data: [] as any[] };
+        : { data: [] as any[], error: null };
+      if (linesError) throw linesError;
       return { uid, depots: depots ?? [], sheets: sheets ?? [], lines: lines ?? [], stations: (stations ?? []) as Station[], agents: agents ?? [] };
     },
   });
@@ -246,7 +249,7 @@ function ServiceSheetPage() {
 
       <Card className="p-6">
         <h2 className="font-display text-lg font-semibold">Feuilles de service</h2>
-        {isLoading ? (
+        {error ? <p role="alert" className="mt-3 text-destructive">Impossible de charger les feuilles de service : {error.message}</p> : isLoading ? (
           <p className="mt-3 text-muted-foreground">Chargement…</p>
         ) : !data?.sheets.length ? (
           <p className="mt-3 text-muted-foreground">Aucune feuille de service enregistrée.</p>

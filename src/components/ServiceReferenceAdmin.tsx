@@ -22,14 +22,14 @@ export function ServiceReferenceAdmin() {
   const save = useMutation({ mutationFn: async () => {
     if (!/^\d{1,10}$/.test(form.code.trim()) || !form.name.trim()) throw new Error('Renseignez un code numérique et un nom');
     const value = { code: form.code.trim(), name: form.name.trim() };
-    const result = form.id ? await supabase.from('stations').update(value).eq('id',form.id) : await supabase.from('stations').insert(value);
+    const result = form.id ? await supabase.from('stations').update(value).eq('id',form.id).select('id').single() : await supabase.from('stations').insert(value).select('id').single();
     if (result.error) throw result.error;
   }, onSuccess: () => {setForm({id:'',code:'',name:''}); changed(); toast.success('Gare enregistrée');}, onError: e => toast.error(e.message) });
   const active = useMutation({mutationFn: async ({id,value}:{id:string;value:boolean}) => {
-    const {error} = await supabase.from('stations').update({active:value}).eq('id',id); if(error) throw error;
+    const {error} = await supabase.from('stations').update({active:value}).eq('id',id).select('id').single(); if(error) throw error;
   }, onSuccess: changed, onError: e => toast.error(e.message)});
   const rule = useMutation({mutationFn: async ({level,value}:{level:Level;value:boolean}) => {
-    const {error} = await supabase.from('function_duty_rules').upsert({level,requires_duty_log:value,updated_at:new Date().toISOString()}); if(error) throw error;
+    const {error} = await supabase.from('function_duty_rules').upsert({level,requires_duty_log:value,updated_at:new Date().toISOString()}).select('level').single(); if(error) throw error;
   }, onSuccess:changed, onError:e=>toast.error(e.message)});
   return <div className="space-y-8">
     {error && <p role="alert" className="text-destructive">{error.message}</p>}

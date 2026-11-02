@@ -13,6 +13,7 @@ import { BookOpen, GraduationCap, Trophy, ListChecks, TrendingUp, TrendingDown, 
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
+  head: () => ({ meta: [{ title: "Tableau de bord — RailFormation CAMRAIL" }, { name: "description", content: "Niveau actuel, scores, tendances et objectifs de progression des agents de conduite CAMRAIL." }, { property: "og:title", content: "Tableau de bord — RailFormation CAMRAIL" }, { property: "og:description", content: "Suivi de votre niveau et de votre progression en formation ferroviaire." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
 });
 
 const GOAL_AVG = 80;

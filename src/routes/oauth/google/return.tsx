@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 export const Route = createFileRoute("/oauth/google/return")({
   ssr: false,
   component: OAuthReturn,
-  head: () => ({ meta: [{ title: "Connexion Gmail — RailFormation" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Connexion Gmail — RailFormation" }, { name: "description", content: "Finalisation de la connexion de votre Gmail personnel à RailFormation." }, { property: "og:title", content: "Connexion Gmail — RailFormation" }, { property: "og:description", content: "Connexion Gmail pour l’envoi de vos documents CAMRAIL." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }] }),
 });
 
 function OAuthReturn() {
