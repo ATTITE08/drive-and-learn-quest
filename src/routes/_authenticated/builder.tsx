@@ -14,6 +14,7 @@ import { Plus, Trash2, GripVertical, ListChecks, PenLine, Save } from "lucide-re
 
 export const Route = createFileRoute("/_authenticated/builder")({
   component: BuilderPage,
+  head: () => ({ meta: [{ title: "Créer un questionnaire — RailFormation CAMRAIL" }, { name: "description", content: "Constitution de QCM et cas pratiques pour les agents CAMRAIL, avec critères et barèmes." }, { property: "og:title", content: "Créer un questionnaire — RailFormation CAMRAIL" }, { property: "og:description", content: "Préparation des évaluations de conduite et de leurs barèmes." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
 });
 
 type Criterion = { label: string; points: number };

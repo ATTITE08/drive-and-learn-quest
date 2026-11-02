@@ -10,6 +10,7 @@ import { levelLabel, subjectLabel } from "@/lib/constants";
 
 export const Route = createFileRoute("/_authenticated/quizzes/$id/versions")({
   component: VersionsPage,
+  head: () => ({ meta: [{ title: "Versions du questionnaire — RailFormation CAMRAIL" }, { name: "description", content: "Historique des versions brouillon et publiées des questionnaires CAMRAIL." }, { property: "og:title", content: "Versions du questionnaire — RailFormation CAMRAIL" }, { property: "og:description", content: "Suivi des révisions des évaluations ferroviaires." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   errorComponent: ({ error, reset }) => {
     const router = useRouter();
     return (

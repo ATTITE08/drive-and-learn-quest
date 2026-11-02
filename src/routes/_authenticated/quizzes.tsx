@@ -15,6 +15,7 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/quizzes")({
   component: Quizzes,
+  head: () => ({ meta: [{ title: "Questionnaires — RailFormation CAMRAIL" }, { name: "description", content: "Questionnaires de formation CAMRAIL par matière et niveau : IGS, PRAC, frein et technologies." }, { property: "og:title", content: "Questionnaires — RailFormation CAMRAIL" }, { property: "og:description", content: "Évaluations disponibles pour les agents de conduite." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
 });
 
 function Quizzes() {

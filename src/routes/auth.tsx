@@ -17,6 +17,7 @@ export const Route = createFileRoute("/auth")({
     if (data.user) throw redirect({ to: "/dashboard" });
   },
   component: AuthPage,
+  head: () => ({ meta: [{ title: "Connexion et inscription — RailFormation CAMRAIL" }, { name: "description", content: "Connexion des agents CAMRAIL et création de compte avec matricule, nom complet, fonction et grade." }, { property: "og:title", content: "Connexion et inscription — RailFormation CAMRAIL" }, { property: "og:description", content: "Accédez à votre espace de formation et de suivi CAMRAIL." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
 });
 
 /** Le matricule sert d'identifiant et de mot de passe : on en dérive un email

@@ -30,6 +30,7 @@ import {
 
 export const Route = createFileRoute("/_authenticated/quiz/$id")({
   component: QuizPage,
+  head: () => ({ meta: [{ title: "Passer une évaluation — RailFormation CAMRAIL" }, { name: "description", content: "Évaluation des connaissances de conduite CAMRAIL par QCM et cas pratiques." }, { property: "og:title", content: "Passer une évaluation — RailFormation CAMRAIL" }, { property: "og:description", content: "Questionnaire et validation des réponses de l’agent." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
 });
 
 type Criterion = { label: string; points: number };
