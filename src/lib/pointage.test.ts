@@ -1,3 +1,4 @@
+/// <reference types="bun" />
 import { describe, it, expect } from 'bun:test';
 import { calculatePointage, durationMinutes, type DayInput } from './pointage';
 const service = (date: string, hours: number): DayInput => ({date, status:'service', start:'00:00', end:`${String(hours).padStart(2,'0')}:00`, source:'Feuille de service'});
