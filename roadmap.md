@@ -1,6 +1,7 @@
 # Roadmap
 
 ## En cours
+- [ ] Créer des services fictifs identifiés et tester prise/clôture, pointage avec heures supplémentaires et remplissage du relevé sans doublons
 - [x] Remplir automatiquement les relevés depuis le pointage réel, sans doublons et sans modifier les relevés soumis ou validés
 - [ ] Vérifier le remplissage avec un service réel clôturé — aucune prise de service enregistrée actuellement ; vérifications connectées du cas vide, appels répétés et accès non autorisé effectuées
 - [x] Finaliser gares validées, prise de service, prévu/réel, pointage et administration
