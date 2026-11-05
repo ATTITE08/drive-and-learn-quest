@@ -1,7 +1,7 @@
 # Roadmap
 
 ## En cours
-- [ ] Remplir automatiquement les relevés depuis le pointage réel, sans doublons et sans modifier les relevés soumis ou validés
+- [ ] Remplir automatiquement les relevés depuis le pointage réel, sans doublons et sans modifier les relevés soumis ou validés ; tester avec un service réel (aucune prise de service enregistrée actuellement)
 - [x] Finaliser gares validées, prise de service, prévu/réel, pointage et administration
 - [ ] Vérifier prise/clôture et pointage de bout en bout — attend un service réel associé à un agent ; aucun service fictif ajouté
 - [ ] Vérifier les modifications des référentiels dans Administration — compte courant sans accès administrateur
