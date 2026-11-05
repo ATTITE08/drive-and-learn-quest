@@ -489,6 +489,7 @@ export type Database = {
           notes: string | null
           record_id: string
           service_type: string
+          source_duty_log_id: string | null
           start_time: string | null
           train_number: string | null
           work_date: string
@@ -506,6 +507,7 @@ export type Database = {
           notes?: string | null
           record_id: string
           service_type?: string
+          source_duty_log_id?: string | null
           start_time?: string | null
           train_number?: string | null
           work_date: string
@@ -523,6 +525,7 @@ export type Database = {
           notes?: string | null
           record_id?: string
           service_type?: string
+          source_duty_log_id?: string | null
           start_time?: string | null
           train_number?: string | null
           work_date?: string
@@ -533,6 +536,13 @@ export type Database = {
             columns: ["record_id"]
             isOneToOne: false
             referencedRelation: "movement_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "movement_lines_source_duty_log_id_fkey"
+            columns: ["source_duty_log_id"]
+            isOneToOne: false
+            referencedRelation: "duty_logs"
             referencedColumns: ["id"]
           },
         ]
@@ -1043,6 +1053,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      fill_movement_from_pointage: {
+        Args: { _end?: string; _record_id?: string; _start?: string }
+        Returns: Json
+      }
       save_duty_log: { Args: { _payload: Json }; Returns: string }
     }
     Enums: {
