@@ -1,5 +1,5 @@
-import { createFileRoute } from '@tanstack/react-router';
-import { queryOptions, useSuspenseQuery } from '@tanstack/react-query';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { queryOptions, useSuspenseQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -7,7 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { calculatePointage, hoursLabel, type DayInput } from '@/lib/pointage';
-import { Printer } from 'lucide-react';
+import { Printer, FileInput } from 'lucide-react';
+import { toast } from 'sonner';
+import { eligibleRealMovements } from '@/lib/movement-autofill';
 
 const pointageQuery = queryOptions({queryKey:['pointage'],queryFn:async()=>{
   const auth=await supabase.auth.getUser(); if(!auth.data.user) throw new Error('Connexion requise');
@@ -27,10 +29,25 @@ export const Route=createFileRoute('/_authenticated/pointage')({
 });
 function PointagePage(){
   const {data}=useSuspenseQuery(pointageQuery);
+  const navigate=useNavigate();
+  const qc=useQueryClient();
   const [agent,setAgent]=useState(data.uid);
   const [month,setMonth]=useState(new Date().toISOString().slice(0,7));
   const [year,m]=month.split('-').map(Number);
   const count=Number.isFinite(year)&&Number.isFinite(m)?new Date(year,m,0).getDate():0;
+  const fill=useMutation({mutationFn:async()=>{
+    const start=`${month}-01`,end=`${month}-${String(count).padStart(2,'0')}`;
+    const real=eligibleRealMovements(data.logs.filter(l=>l.agent_id===data.uid).map(l=>({...l,departure:null,arrival:null})),start,end);
+    if(!real.length) throw new Error('Aucun service réel clôturé pour cette période');
+    const result=await supabase.rpc('fill_movement_from_pointage',{_start:start,_end:end});
+    if(result.error) throw result.error;
+    return result.data as {record_id:string|null};
+  },onSuccess:async(result)=>{
+    if(!result.record_id){toast.info('Aucun service réel clôturé pour cette période');return;}
+    await qc.invalidateQueries({queryKey:['movements']});
+    toast.success('Relevé rempli depuis les services réels');
+    navigate({to:'/mouvements'});
+  },onError:(e:Error)=>toast.error(e.message)});
   const days:DayInput[]=Array.from({length:count},(_,i)=>{
     const date=`${month}-${String(i+1).padStart(2,'0')}`;
     const sheets=data.sheets.filter(s=>s.service_date===date).map(s=>s.id);
@@ -47,7 +64,7 @@ function PointagePage(){
   });
   const result=calculatePointage(days);
   const profile=data.profiles.find(p=>p.id===agent);
-  return <div className="space-y-6"><div className="flex flex-wrap items-center justify-between gap-3"><h1 className="font-display text-2xl font-bold">Feuille de pointage</h1><Button variant="outline" className="no-print" onClick={()=>window.print()}><Printer className="mr-2 h-4 w-4"/>Imprimer / PDF</Button></div>
+  return <div className="space-y-6"><div className="flex flex-wrap items-center justify-between gap-3"><h1 className="font-display text-2xl font-bold">Feuille de pointage</h1><div className="no-print flex flex-wrap gap-2">{agent===data.uid&&<Button variant="outline" onClick={()=>fill.mutate()} disabled={fill.isPending||!count}><FileInput className="mr-2 h-4 w-4"/>Remplir mon relevé</Button>}<Button variant="outline" onClick={()=>window.print()}><Printer className="mr-2 h-4 w-4"/>Imprimer / PDF</Button></div></div>
     <div className="no-print grid gap-4 sm:grid-cols-2"><div><Label>Agent</Label><Select value={agent} onValueChange={setAgent}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>{data.profiles.map(p=><SelectItem key={p.id} value={p.id}>{p.full_name||p.matricule||'Agent'}</SelectItem>)}</SelectContent></Select></div><div><Label htmlFor="pointage-month">Mois</Label><Input id="pointage-month" type="month" value={month} onChange={e=>setMonth(e.target.value)}/></div></div>
     <p className="font-semibold">{profile?.full_name??'Agent'} · {profile?.matricule??'—'} · {month}</p>
     {result.incomplete&&<p role="status" className="text-destructive">Pointage provisoire : des services ne sont pas clôturés.</p>}

@@ -96,6 +96,7 @@ function DutyLogPage() {
       qc.invalidateQueries({ queryKey: ["duty-logs"] });
       qc.invalidateQueries({ queryKey: ["service-sheets"] });
       qc.invalidateQueries({ queryKey: ["pointage"] });
+      qc.invalidateQueries({ queryKey: ["movements"] });
     },
     onError: (e: any) => toast.error(e.message ?? "Échec"),
   });
@@ -112,7 +113,7 @@ function DutyLogPage() {
         } });
       if (error) throw error;
     },
-    onSuccess: () => { toast.success("Fin de service enregistrée"); qc.invalidateQueries({ queryKey: ["duty-logs"] }); qc.invalidateQueries({ queryKey: ["service-sheets"] }); qc.invalidateQueries({ queryKey: ["pointage"] }); },
+    onSuccess: () => { toast.success("Fin de service enregistrée"); qc.invalidateQueries({ queryKey: ["duty-logs"] }); qc.invalidateQueries({ queryKey: ["service-sheets"] }); qc.invalidateQueries({ queryKey: ["pointage"] }); qc.invalidateQueries({ queryKey: ["movements"] }); },
     onError: (e: any) => toast.error(e.message ?? "Échec"),
   });
 

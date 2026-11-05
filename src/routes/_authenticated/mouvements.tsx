@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Send, Trash2, CheckCircle2, XCircle, Wallet, Printer, Save, Mail, FileDown } from "lucide-react";
+import { Plus, Send, Trash2, CheckCircle2, XCircle, Wallet, Printer, Save, Mail, FileDown, RefreshCw } from "lucide-react";
 import { GmailPanel } from "@/components/GmailPanel";
 import { SendEmailDialog } from "@/components/SendEmailDialog";
 import { elementToPdf, downloadBlob } from "@/lib/docs/files";
@@ -143,6 +143,19 @@ function MovementsPage() {
     },
     onSuccess: () => { toast.success("En-tête enregistré"); qc.invalidateQueries({ queryKey: ["movements"] }); },
     onError: (e: any) => toast.error(e.message ?? "Échec"),
+  });
+
+  const fillFromPointage = useMutation({
+    mutationFn: async (recordId: string) => {
+      const { data: result, error } = await supabase.rpc('fill_movement_from_pointage', { _record_id: recordId });
+      if (error) throw error;
+      return result as { total: number; changed: number };
+    },
+    onSuccess: (result) => {
+      toast.success(result.total ? `${result.total} service(s) réel(s) dans le relevé, sans doublons` : 'Aucun service réel clôturé pour cette période');
+      qc.invalidateQueries({ queryKey: ['movements'] });
+    },
+    onError: (e: Error) => toast.error(e.message),
   });
 
   const addLine = useMutation({
@@ -440,6 +453,9 @@ function MovementsPage() {
 
                     {editable && (
                       <div className="mt-3">
+                        <Button variant="outline" size="sm" className="mr-2 mb-2" onClick={() => fillFromPointage.mutate(r.id)} disabled={fillFromPointage.isPending}>
+                          <RefreshCw className="mr-1 h-4 w-4" /> Remplir depuis le pointage
+                        </Button>
                         <Button variant="outline" size="sm" onClick={() => setOpenId(openId === r.id ? null : r.id)}>
                           <Plus className="mr-1 h-4 w-4" /> Ajouter un mouvement
                         </Button>
