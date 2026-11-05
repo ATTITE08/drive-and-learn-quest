@@ -36,6 +36,13 @@
       "when": 1793860914683,
       "tag": "0004_automatic_movements_from_real_pointage",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793861042238,
+      "tag": "0005_real_pointage_time_format",
+      "breakpoints": true
     }
   ]
 }
