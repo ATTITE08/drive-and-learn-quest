@@ -11,3 +11,4 @@
 
 - Service actuals are synchronized through the existing transactional save_duty_log RPC; never update planned fields through a duty action.
 - Pointage is computed from authorized service/duty reads in a pure shared module, avoiding duplicate stored totals.
+- Movement autofill uses transactional database functions and triggers from closed duty logs only, with a globally unique source reference; editable records synchronize without changing submitted records or paper layouts.
